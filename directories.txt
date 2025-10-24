@@ -1,0 +1,15 @@
+﻿
+Name             
+----             
+.next            
+app              
+components       
+hooks            
+lib              
+node_modules     
+playwright-report
+public           
+test-results     
+tests            
+
+
