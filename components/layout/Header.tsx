@@ -1,19 +1,19 @@
 'use client'
 
 // React
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 
 // Next.js
 import { useRouter, usePathname } from 'next/navigation'
 import Image from 'next/image'
 
+// Supabase
+import { supabase } from '@/lib/supabase/client'
+
 // External libraries
 import { Bell, Sun, Moon, Coins, CreditCard, Gift, Settings, LogOut, BookOpen } from '@/lib/icons'
 
-// Internal utilities
-import { isAuthenticated, logout, getUserInfo } from '@/lib/auth'
-
-export function Header() {
+function HeaderComponent() {
   const router = useRouter()
   const pathname = usePathname()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -27,35 +27,81 @@ export function Header() {
   })
   const [mounted, setMounted] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userName, setUserName] = useState('User')
+  const [userEmail, setUserEmail] = useState('')
+  const [userPicture, setUserPicture] = useState('')
+  const [credits, setCredits] = useState(100)
   const hasNotifications = false
 
-  // Get user info
-  const userInfo = getUserInfo()
-  const userName = userInfo?.name || "User"
-  const userEmail = userInfo?.email || "user@example.com"
-  const userPicture = userInfo?.picture || ""
-  const credits = 1000
   const userInitial = userName.charAt(0).toUpperCase()
 
-  // Apply theme on mount and check auth on route change
+  // Handle theme and authentication on mount and route changes
   useEffect(() => {
-    // Initial setup on mount
-    if (!mounted) {
-      // Apply theme to DOM
-      if (isDark) {
-        document.documentElement.classList.add('dark')
-      } else {
-        document.documentElement.classList.remove('dark')
+    // Apply theme to DOM
+    if (isDark) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [isDark])
+
+  useEffect(() => {
+    // Check authentication status using Supabase
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session?.user) {
+          setIsLoggedIn(true)
+          setUserEmail(session.user.email || '')
+          
+          // Fetch profile data
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, avatar_url, credits_balance')
+            .eq('id', session.user.id)
+            .single()
+
+          if (profile) {
+            setUserName(profile.full_name || session.user.email?.split('@')[0] || 'User')
+            setUserPicture(profile.avatar_url || session.user.user_metadata?.avatar_url || '')
+            setCredits(profile.credits_balance || 100)
+          } else {
+            setUserName(session.user.email?.split('@')[0] || 'User')
+          }
+        } else {
+          setIsLoggedIn(false)
+        }
+      } catch (error) {
+        console.error('header: auth check error', error)
+        setIsLoggedIn(false)
       }
+    }
+    
+    const initializeAuth = async () => {
+      await checkAuth()
       setMounted(true)
     }
+    
+    initializeAuth()
 
-    // Check authentication status (runs on every pathname change)
-    const checkAuth = () => {
-      setIsLoggedIn(isAuthenticated())
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        setIsLoggedIn(true)
+        setUserEmail(session.user.email || '')
+      } else if (event === 'SIGNED_OUT') {
+        setIsLoggedIn(false)
+        setUserName('User')
+        setUserEmail('')
+        setUserPicture('')
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
     }
-    checkAuth()
-  }, [pathname, mounted, isDark])
+  }, [pathname])
 
   const toggleTheme = () => {
     const newIsDark = !isDark
@@ -83,12 +129,13 @@ export function Header() {
             className="shrink-0 hover:opacity-80 transition-opacity"
           >
             <Image 
-              src="/logo.png" 
+              src="/logo.png?v=2" 
               alt="Personal Academy" 
               width={120}
               height={120}
               priority
               className="object-contain"
+              unoptimized
             />
           </button>
           <div className="flex items-center gap-4">
@@ -112,12 +159,13 @@ export function Header() {
           className="shrink-0 hover:opacity-80 transition-opacity"
         >
           <Image 
-            src="/logo.png" 
+            src="/logo.png?v=2" 
             alt="Personal Academy" 
             width={120}
             height={120}
             priority
             className="object-contain"
+            unoptimized
           />
         </button>
 
@@ -274,12 +322,15 @@ export function Header() {
                   <div className="border-t border-gray-200 dark:border-slate-700 my-2"></div>
 
                   <button
-                    onClick={() => {
-                      // Clear any auth tokens/session data using the logout utility
-                      logout()
-                      setIsDropdownOpen(false)
-                      // Redirect to landing page with full reload
-                      window.location.href = '/'
+                    onClick={async () => {
+                      try {
+                        await supabase.auth.signOut()
+                        setIsDropdownOpen(false)
+                        // Redirect to landing page with full reload
+                        window.location.href = '/'
+                      } catch (error) {
+                        console.error('header: logout error', error)
+                      }
                     }}
                     className="w-full text-left px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2 cursor-pointer"
                   >
@@ -304,3 +355,6 @@ export function Header() {
     </header>
   )
 }
+
+// Memoized export for performance
+export const Header = memo(HeaderComponent)
