@@ -5,15 +5,20 @@ import { useEffect, useState } from 'react'
 
 // Next.js
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
+import Image from 'next/image'
 
-// Components
-import ContactForm from '@/components/ContactForm'
+// Supabase
+import { supabase } from '@/lib/supabase/client'
+
+// Components - lazy loaded
+const ContactForm = dynamic(() => import('@/components/ContactForm'), {
+  ssr: false,
+  loading: () => <div className="animate-pulse bg-slate-700/30 rounded-xl h-96"></div>
+})
 
 // External libraries
 import { Zap, Target, Rocket, Mail } from '@/lib/icons'
-
-// Internal utilities
-import { isAuthenticated } from '@/lib/auth'
 
 export default function LandingPage() {
   const router = useRouter()
@@ -21,7 +26,12 @@ export default function LandingPage() {
   const [isContactFormOpen, setIsContactFormOpen] = useState(false)
 
   useEffect(() => {
-    setIsLoggedIn(isAuthenticated())
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      setIsLoggedIn(!!session?.user)
+    }
+    
+    checkAuth()
   }, [])
 
   return (
@@ -31,6 +41,19 @@ export default function LandingPage() {
       <section className="py-12 md:py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <Image 
+              src="/logo.png?v=2" 
+              alt="Personal Academy" 
+              width={180}
+              height={180}
+              priority
+              className="w-36 h-36 object-contain"
+              unoptimized
+            />
+          </div>
+
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
             Create Engaging Courses in Minutes with AI
           </h1>

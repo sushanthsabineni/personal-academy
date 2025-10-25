@@ -52,6 +52,8 @@ export default function RazorpayPaymentModal({
     setErrorMessage('')
 
     try {
+      console.log('💳 Creating payment order...')
+      
       // Create order on backend
       const orderResponse = await fetch('/api/payment/create-order', {
         method: 'POST',
@@ -66,20 +68,51 @@ export default function RazorpayPaymentModal({
         }),
       })
 
+      const responseData = await orderResponse.json()
+      
+      console.log('📬 Order response:', { 
+        ok: orderResponse.ok, 
+        status: orderResponse.status,
+        hasOrderId: !!responseData.orderId,
+        hasKey: !!responseData.key,
+        error: responseData.error 
+      })
+
       if (!orderResponse.ok) {
-        throw new Error('Failed to create payment order')
+        // Handle specific error cases
+        if (orderResponse.status === 401) {
+          setPaymentStatus('error')
+          setErrorMessage('Please log in to make a purchase.')
+          setIsProcessing(false)
+          return
+        }
+        
+        if (orderResponse.status === 500 && responseData.error?.includes('not configured')) {
+          setPaymentStatus('error')
+          setErrorMessage('Payment system is being configured. Please try again later or contact support.')
+          setIsProcessing(false)
+          return
+        }
+        
+        throw new Error(responseData.error || 'Failed to create payment order')
       }
 
-      const { orderId, key } = await orderResponse.json()
+      const { orderId, key } = responseData
+
+      if (!orderId || !key) {
+        throw new Error('Invalid order response - missing order ID or key')
+      }
+
+      console.log('✅ Order created:', orderId)
 
       // Razorpay checkout options
       const options: RazorpayOptions = {
-        key: key || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '',
+        key: key,
         amount: amountInPaise,
         currency,
         name: 'Personal Academy',
         description: `${tier.credits} Credits - ${tier.name} Plan`,
-        image: '/logo.png', // Add your logo
+        image: '/logo.png?v=2',
         order_id: orderId,
         prefill: {
           name: userName,
@@ -94,10 +127,12 @@ export default function RazorpayPaymentModal({
         },
         handler: async (response: RazorpaySuccessResponse) => {
           // Payment successful, verify on backend
+          console.log('✅ Payment successful, verifying...')
           await verifyPayment(response, orderId)
         },
         modal: {
           ondismiss: () => {
+            console.log('❌ Payment modal dismissed')
             setIsProcessing(false)
           },
           escape: true,
@@ -105,21 +140,23 @@ export default function RazorpayPaymentModal({
         },
       }
 
+      console.log('🚀 Opening Razorpay checkout...')
       const razorpay = new window.Razorpay(options)
       
       razorpay.on('payment.failed', (response: RazorpaySuccessResponse) => {
         setIsProcessing(false)
         setPaymentStatus('error')
         setErrorMessage('Payment failed. Please try again.')
-        console.error('Payment failed:', response)
+        console.error('❌ Payment failed:', response)
       })
 
       razorpay.open()
     } catch (error) {
-      console.error('Payment error:', error)
+      console.error('❌ Payment error:', error)
       setIsProcessing(false)
       setPaymentStatus('error')
-      setErrorMessage('Failed to initialize payment. Please try again.')
+      const errorMsg = error instanceof Error ? error.message : 'Failed to initialize payment'
+      setErrorMessage(errorMsg + '. Please try again or contact support.')
     }
   }
 

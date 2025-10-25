@@ -131,10 +131,10 @@ function HeaderComponent() {
             <Image 
               src="/logo.png?v=2" 
               alt="Personal Academy" 
-              width={120}
-              height={120}
+              width={180}
+              height={180}
               priority
-              className="object-contain"
+              className="h-14 w-auto object-contain"
               unoptimized
             />
           </button>
@@ -161,10 +161,10 @@ function HeaderComponent() {
           <Image 
             src="/logo.png?v=2" 
             alt="Personal Academy" 
-            width={120}
-            height={120}
+            width={180}
+            height={180}
             priority
-            className="object-contain"
+            className="h-14 w-auto object-contain"
             unoptimized
           />
         </button>
