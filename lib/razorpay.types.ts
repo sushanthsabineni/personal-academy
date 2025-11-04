@@ -46,16 +46,16 @@ export interface RazorpayInstance {
 }
 
 export interface PricingTier {
+  id: string
   name: string
   credits: number
-  storyboards: number
+  storyboards?: number
+  savings?: number
   prices: {
     INR: number
     USD: number
-    GBP: number
-    AUD: number
+    GBP?: number
+    AUD?: number
   }
-  savings: number
-  features: string[]
-  highlighted: boolean
+  features?: string[]
 }

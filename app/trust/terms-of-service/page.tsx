@@ -253,26 +253,18 @@ export default function TermsOfServicePage() {
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">4.1 Payment Methods</h3>
               <p className="text-gray-700 leading-relaxed mb-3">
-                We accept payments through the following secure payment processors:
+                We accept payments through Razorpay, a secure PCI DSS compliant payment processor:
               </p>
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="max-w-md mx-auto">
                 <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <h4 className="font-semibold text-blue-900 mb-2">🇮🇳 Razorpay (India)</h4>
-                  <p className="text-sm text-blue-800 mb-2">For customers in India</p>
+                  <h4 className="font-semibold text-blue-900 mb-2">💳 Razorpay</h4>
+                  <p className="text-sm text-blue-800 mb-2">Supports domestic and international payments</p>
                   <ul className="text-xs text-blue-700 space-y-1">
-                    <li>• Credit/Debit Cards</li>
-                    <li>• UPI</li>
+                    <li>• Credit/Debit Cards (Visa, Mastercard, Amex, Rupay)</li>
+                    <li>• UPI (Unified Payments Interface)</li>
                     <li>• Net Banking</li>
-                    <li>• Wallets (Paytm, PhonePe, etc.)</li>
-                  </ul>
-                </div>
-                <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-                  <h4 className="font-semibold text-purple-900 mb-2">🌍 Stripe (International)</h4>
-                  <p className="text-sm text-purple-800 mb-2">For international customers</p>
-                  <ul className="text-xs text-purple-700 space-y-1">
-                    <li>• Credit/Debit Cards (Visa, Mastercard, Amex)</li>
-                    <li>• International payment methods</li>
-                    <li>• Multi-currency support</li>
+                    <li>• Mobile Wallets (Paytm, PhonePe, etc.)</li>
+                    <li>• International Cards</li>
                   </ul>
                 </div>
               </div>

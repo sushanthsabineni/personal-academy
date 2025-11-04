@@ -17,7 +17,7 @@ type ModuleBasic = {
 export async function GET() {
   try {
     // Create server-side Supabase client
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     
     // Check authentication
     const { data: { session }, error: authError } = await supabase.auth.getSession()
@@ -85,7 +85,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     // Create server-side Supabase client
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     
     // Check authentication
     const { data: { session }, error: authError } = await supabase.auth.getSession()
@@ -136,12 +136,12 @@ export async function POST(request: NextRequest) {
     // Define minimum credits required to create a course
     const MINIMUM_CREDITS_REQUIRED = 100
 
-    if (profile.credits_balance < MINIMUM_CREDITS_REQUIRED) {
+    if (((profile as any).credits_balance as number) < MINIMUM_CREDITS_REQUIRED) {
       return NextResponse.json(
         { 
           error: 'Insufficient credits',
-          message: `You need at least ${MINIMUM_CREDITS_REQUIRED} credits to create a course. Current balance: ${profile.credits_balance}`,
-          current_balance: profile.credits_balance,
+          message: `You need at least ${MINIMUM_CREDITS_REQUIRED} credits to create a course. Current balance: ${(profile as any).credits_balance}`,
+          current_balance: (profile as any).credits_balance,
           required_credits: MINIMUM_CREDITS_REQUIRED
         },
         { status: 402 } // 402 Payment Required
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
     // Create the course
     const { data: newCourse, error: createError } = await supabase
       .from('courses')
-      .insert(courseData)
+      .insert(courseData as never)
       .select(`
         *,
         modules (

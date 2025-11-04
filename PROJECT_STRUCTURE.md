@@ -319,7 +319,7 @@ personal-academy/
 - **Component**: `components/ContactForm.tsx`
 - **API**: `app/api/contact/route.ts`
 - **Integrations**: Landing page, Help center, Support page
-- **Email**: Sends to personalacademy1@gmail.com via Resend
+- **Email**: Sends to support@personalacademy.app via Resend
 
 ### Supabase Integration ✅
 - **Client Setup**: Browser and server-side clients

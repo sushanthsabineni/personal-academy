@@ -29,7 +29,7 @@ export default function FAQPage() {
         {
           id: 'faq-1-2',
           question: 'How does Personal Academy work?',
-          answer: 'Personal Academy uses a simple 4-step process: (1) Define your course topic and target audience, (2) AI generates a comprehensive course structure, (3) Customize lessons, modules, and assessments, (4) Export your course in multiple formats (PDF, SCORM, DOCX). The entire process is guided and takes just minutes!'
+          answer: 'Personal Academy uses a simple 4-step process: (1) Define your course topic and target audience, (2) AI generates a comprehensive course structure, (3) Customize lessons, modules, and assessments, (4) Export your course in multiple formats (PDF, DOCX). The entire process is guided and takes just minutes!'
         },
         {
           id: 'faq-1-3',
@@ -62,7 +62,7 @@ export default function FAQPage() {
         {
           id: 'faq-2-2',
           question: 'What are the pricing plans?',
-          answer: 'We offer three main plans:\n\n• Starter: ₹999 for 1,000 credits\n• Growth: ₹2,699 for 3,000 credits (10% savings)\n• Scale: ₹4,249 for 5,000 credits (15% savings)\n\nAll credits are valid for 365 days from purchase date. Visit our pricing page for detailed comparisons.'
+          answer: 'We offer flexible credit packages:\n\n• 1,000 Credits: ₹999 / $15\n• 3,000 Credits: ₹2,699 / $41 (10% OFF)\n• 5,000 Credits: ₹3,999 / $60 (20% OFF)\n\nAll credits are valid for 365 days from purchase date. Approximately 250 credits are needed per standard storyboard.'
         },
         {
           id: 'faq-2-3',
@@ -82,7 +82,7 @@ export default function FAQPage() {
         {
           id: 'faq-2-6',
           question: 'What payment methods do you accept?',
-          answer: 'We accept payments via Razorpay (for customers in India) and Stripe (for international customers). Both processors support credit cards, debit cards, UPI, net banking, and digital wallets. All transactions are PCI DSS compliant and secure.'
+          answer: 'We accept payments via Razorpay, which supports credit/debit cards (Visa, Mastercard, Amex), UPI, net banking, and mobile wallets. International cards are also supported. All transactions are PCI DSS compliant and secure.'
         },
         {
           id: 'faq-2-7',
@@ -110,7 +110,7 @@ export default function FAQPage() {
         {
           id: 'faq-3-3',
           question: 'What export formats are available?',
-          answer: 'Personal Academy supports three export formats:\n\n• PDF: Beautiful formatted document for print or digital distribution\n• SCORM 1.2: Industry-standard package for LMS platforms (Moodle, Canvas, etc.)\n• DOCX: Microsoft Word document for further editing\n\nAll exports maintain professional formatting and include your branding.'
+          answer: 'Personal Academy supports three standard export formats:\n\n• PDF: Beautiful formatted document for print or digital distribution\n• PPT: PowerPoint presentation for workshops and training\n• DOC: Microsoft Word document for further editing\n\nAll exports maintain professional formatting with clean layouts.'
         },
         {
           id: 'faq-3-4',
@@ -126,11 +126,6 @@ export default function FAQPage() {
           id: 'faq-3-6',
           question: 'How many courses can I create?',
           answer: 'There\'s no limit to how many courses you can create, as long as you have credits available. Each course generation consumes credits based on complexity. Free plan users may have course storage limits - check your dashboard for details.'
-        },
-        {
-          id: 'faq-3-7',
-          question: 'Can I upload my courses to an LMS?',
-          answer: 'Yes! Export your course as SCORM 1.2 and upload it to any SCORM-compliant LMS platform including Moodle, Canvas, Blackboard, TalentLMS, and more. Our SCORM packages are tested with major LMS platforms.'
         }
       ]
     },
@@ -186,12 +181,7 @@ export default function FAQPage() {
         {
           id: 'faq-5-3',
           question: 'How do I change my password?',
-          answer: 'Go to Account Settings > Security and click "Change Password". You\'ll need to enter your current password and choose a new one. We recommend using a strong, unique password and enabling two-factor authentication for additional security.'
-        },
-        {
-          id: 'faq-5-4',
-          question: 'Do you offer two-factor authentication?',
-          answer: 'Yes! We highly recommend enabling two-factor authentication (2FA) for additional account security. You can set it up in Account Settings > Security. Once enabled, you\'ll need both your password and a verification code to log in.'
+          answer: 'Go to Account Settings > Security and click "Change Password". You\'ll need to enter your current password and choose a new one. We recommend using a strong, unique password for account security.'
         },
         {
           id: 'faq-5-5',
@@ -201,7 +191,7 @@ export default function FAQPage() {
         {
           id: 'faq-5-6',
           question: 'Can I export my data?',
-          answer: 'Yes! Under GDPR and DPDP Act, you have the right to data portability. Contact support at personalacademy1@gmail.com to request a complete export of your personal data. We\'ll provide it in a machine-readable format within 30 days.'
+          answer: 'Yes! Under GDPR and DPDP Act, you have the right to data portability. Contact support at support@personalacademy.app to request a complete export of your personal data. We\'ll provide it in a machine-readable format within 30 days.'
         }
       ]
     },
@@ -229,17 +219,12 @@ export default function FAQPage() {
         {
           id: 'faq-6-4',
           question: 'How do I report a bug?',
-          answer: 'Please email support at personalacademy1@gmail.com with: (1) Description of the bug, (2) Steps to reproduce it, (3) Screenshots if possible, (4) Browser and device information. We appreciate your help in improving Personal Academy!'
-        },
-        {
-          id: 'faq-6-5',
-          question: 'Do you have an API?',
-          answer: 'Yes! We offer a REST API for programmatic access to course generation features. Visit our API Documentation page for complete details, authentication guides, endpoints, and code examples. API access may require a specific plan.'
+          answer: 'Please email support at support@personalacademy.app with: (1) Description of the bug, (2) Steps to reproduce it, (3) Screenshots if possible, (4) Browser and device information. We appreciate your help in improving Personal Academy!'
         },
         {
           id: 'faq-6-6',
           question: 'How can I get support?',
-          answer: 'Support options: (1) Browse our Help Center and FAQ, (2) Check Tutorials for step-by-step guides, (3) Email support at personalacademy1@gmail.com - we respond within 24-48 hours, (4) Review API Documentation for technical integration questions.'
+          answer: 'Support options: (1) Browse our FAQ for common questions, (2) Email support at support@personalacademy.app - we respond within 24-48 hours, (3) Check our pricing page for feature details.'
         }
       ]
     }
@@ -383,27 +368,21 @@ export default function FAQPage() {
             Still have questions?
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Can&apos;t find the answer you&apos;re looking for? Check out our other resources or contact support.
+            Can&apos;t find the answer you&apos;re looking for? Contact our support team for assistance.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/help"
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all shadow-md"
-            >
-              Visit Help Center
-            </Link>
-            <Link
-              href="/tutorials"
-              className="px-6 py-3 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-900 dark:text-white border-2 border-gray-300 dark:border-slate-600 rounded-lg font-semibold transition-all"
-            >
-              View Tutorials
-            </Link>
             <a
-              href="mailto:personalacademy1@gmail.com"
-              className="px-6 py-3 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-900 dark:text-white border-2 border-gray-300 dark:border-slate-600 rounded-lg font-semibold transition-all"
+              href="mailto:support@personalacademy.app"
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all shadow-md"
             >
               Email Support
             </a>
+            <Link
+              href="/pricing"
+              className="px-6 py-3 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-900 dark:text-white border-2 border-gray-300 dark:border-slate-600 rounded-lg font-semibold transition-all"
+            >
+              View Pricing
+            </Link>
           </div>
         </div>
       </div>

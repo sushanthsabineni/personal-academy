@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/cleanup-data",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-payments",
+      "schedule": "0 3 1 * *"
+    },
+    {
+      "path": "/api/cron/expire-credits",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

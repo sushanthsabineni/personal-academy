@@ -150,8 +150,8 @@ All internal page-to-page links validated:
 ### External Links - ALL VALID ✅
 - `https://linkedin.com/company/personalacademy` ✅
 - `https://youtube.com/personalacademy` ✅
-- `mailto:support@personalacademy.com` ✅
-- `mailto:legal@personalacademy.com` ✅
+- `mailto:support@personalacademy.app` ✅
+- `mailto:support@personalacademy.app` ✅
 
 ---
 

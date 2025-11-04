@@ -2,7 +2,14 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import ContactForm from '@/components/ContactForm'
+import dynamic from 'next/dynamic'
+
+// Lazy load ContactForm
+const ContactForm = dynamic(() => import('@/components/ContactForm'), {
+  ssr: false,
+  loading: () => <div className="animate-pulse bg-slate-700/30 rounded-xl h-96"></div>
+})
+
 import { Search, BookOpen, CreditCard, Users, MessageCircle, HelpCircle, ChevronRight, Mail, FileText, Zap, Lock, Download, RefreshCw } from '@/lib/icons'
 
 export default function HelpCenterPage() {
@@ -43,7 +50,7 @@ export default function HelpCenterPage() {
         { title: 'Credit expiration policy (365 days)', link: '/faq#expiration' },
         { title: 'Pricing plans comparison', link: '/pricing' },
         { title: 'Refund policy', link: '/terms-of-service#refunds' },
-        { title: 'Payment methods (Razorpay & Stripe)', link: '/faq#payment-methods' }
+        { title: 'Payment methods (Razorpay)', link: '/faq#payment-methods' }
       ]
     },
     {
@@ -256,7 +263,7 @@ export default function HelpCenterPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="mailto:personalacademy1@gmail.com"
+                href="mailto:support@personalacademy.app"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
               >
                 <Mail size={20} />
@@ -271,7 +278,7 @@ export default function HelpCenterPage() {
               </Link>
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-              📧 Support Email: <a href="mailto:personalacademy1@gmail.com" className="text-blue-600 dark:text-blue-400 hover:underline">personalacademy1@gmail.com</a>
+              📧 Support Email: <a href="mailto:support@personalacademy.app" className="text-blue-600 dark:text-blue-400 hover:underline">support@personalacademy.app</a>
               <br />
               ⏱️ Response time: Within 24-48 hours
             </p>

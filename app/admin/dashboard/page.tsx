@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { isAdmin, adminLogout, getAdminUser, type AdminUser } from '@/lib/adminAuth'
 import { 
   getPlatformMetrics, 
@@ -44,34 +45,62 @@ export default function AdminDashboard() {
   const [aiMetrics, setAIMetrics] = useState<AICreditsMetrics | null>(null)
 
   useEffect(() => {
-    // Check admin auth
-    if (!isAdmin()) {
-      router.push('/admin/login')
-      return
-    }
+    // Check admin auth and load data asynchronously
+    const loadData = async () => {
+      const adminStatus = await isAdmin()
+      if (!adminStatus) {
+        router.push('/admin/login')
+        return
+      }
 
-    const admin = getAdminUser()
-    if (!admin) {
-      router.push('/admin/login')
-      return
-    }
+      const admin = await getAdminUser()
+      if (!admin) {
+        router.push('/admin/login')
+        return
+      }
 
-    setAdminUser(admin)
+      setAdminUser(admin)
+      
+      // Load all data in parallel
+      try {
+        const [metricsData, courseData, revenueDataResult, financialData, aiData, usersData] = await Promise.all([
+          getPlatformMetrics(),
+          getCourseStats(),
+          getDailyRevenue(7),
+          getFinancialMetrics(),
+          getAICreditsMetrics(),
+          getAllUsers()
+        ])
+        
+        setMetrics(metricsData)
+        setCourseStats(courseData)
+        setRevenueData(revenueDataResult)
+        setFinancialMetrics(financialData)
+        setAIMetrics(aiData)
+        
+        // Safely handle users data
+        if (Array.isArray(usersData) && usersData.length > 0) {
+          const recent = usersData.sort((a, b) => 
+            new Date(b.signupDate).getTime() - new Date(a.signupDate).getTime()
+          ).slice(0, 5)
+          setRecentUsers(recent)
+        } else {
+          setRecentUsers([])
+        }
+      } catch (error) {
+        console.error('Error loading dashboard data:', error)
+        // Set defaults on error
+        setMetrics(getPlatformMetrics() as unknown as PlatformMetrics)
+        setCourseStats(getCourseStats() as unknown as CourseStats)
+        setFinancialMetrics(getFinancialMetrics() as unknown as FinancialMetrics)
+        setAIMetrics(getAICreditsMetrics() as unknown as AICreditsMetrics)
+        setRecentUsers([])
+      }
+      
+      setMounted(true)
+    }
     
-    // Load data
-    setMetrics(getPlatformMetrics())
-    setCourseStats(getCourseStats())
-    setRevenueData(getDailyRevenue(7))
-    setFinancialMetrics(getFinancialMetrics())
-    setAIMetrics(getAICreditsMetrics())
-    
-    const users = getAllUsers()
-    const recent = users.sort((a, b) => 
-      new Date(b.signupDate).getTime() - new Date(a.signupDate).getTime()
-    ).slice(0, 5)
-    setRecentUsers(recent)
-    
-    setMounted(true)
+    loadData()
   }, [router])
 
   const handleLogout = () => {
@@ -486,7 +515,13 @@ export default function AdminDashboard() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         {user.profilePicture ? (
-                          <img src={user.profilePicture} alt={user.name} className="w-8 h-8 rounded-full" />
+                          <Image 
+                            src={user.profilePicture} 
+                            alt={user.name} 
+                            width={32}
+                            height={32}
+                            className="w-8 h-8 rounded-full object-cover" 
+                          />
                         ) : (
                           <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
                             {user.name.charAt(0)}

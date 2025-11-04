@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Receipt, Download, Calendar, CreditCard, CheckCircle } from '@/lib/icons'
-import { isAuthenticated } from '@/lib/auth'
+import { supabase } from '@/lib/supabase/client'
 
 interface Purchase {
   id: string
@@ -22,47 +22,53 @@ export default function PurchasesPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push('/login')
-      return
+    const loadPurchases = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.user) {
+        router.push('/login')
+        return
+      }
+
+
+      // Fetch purchases from Supabase
+      const { data: payments, error } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('purchases: fetch error', error)
+        setLoading(false)
+        return
+      }
+
+      // Map payments to Purchase interface
+      const typedPayments = (payments || []) as Array<{
+        id: string;
+        created_at: string;
+        credits_purchased: number;
+        amount: number;
+        currency: string;
+        status: 'completed' | 'pending' | 'refunded';
+      }>;
+      const mappedPurchases: Purchase[] = typedPayments.map(payment => ({
+        id: payment.id,
+        date: payment.created_at,
+        description: `Credits Purchase - ${payment.credits_purchased} Credits`,
+        amount: payment.amount / 100, // Convert from cents
+        currency: payment.currency.toUpperCase(),
+        status: payment.status,
+        invoice: `INV-${payment.id}.pdf`,
+        credits: payment.credits_purchased
+      }))
+
+      setPurchases(mappedPurchases)
+      setLoading(false)
     }
 
-    // Mock purchase data - replace with actual API call
-    setTimeout(() => {
-      setPurchases([
-        {
-          id: 'PUR-2024-001',
-          date: '2024-10-20',
-          description: 'Pro Plan - Monthly Subscription',
-          amount: 49.99,
-          currency: 'USD',
-          status: 'completed',
-          invoice: 'INV-2024-001.pdf',
-          credits: 500
-        },
-        {
-          id: 'PUR-2024-002',
-          date: '2024-10-15',
-          description: 'Additional Credits Pack - 200 Credits',
-          amount: 19.99,
-          currency: 'USD',
-          status: 'completed',
-          invoice: 'INV-2024-002.pdf',
-          credits: 200
-        },
-        {
-          id: 'PUR-2024-003',
-          date: '2024-09-20',
-          description: 'Pro Plan - Monthly Subscription',
-          amount: 49.99,
-          currency: 'USD',
-          status: 'completed',
-          invoice: 'INV-2024-003.pdf',
-          credits: 500
-        }
-      ])
-      setLoading(false)
-    }, 500)
+    loadPurchases()
   }, [router])
 
   const getStatusColor = (status: Purchase['status']) => {
@@ -93,7 +99,7 @@ export default function PurchasesPage() {
   const handleDownloadInvoice = (invoice: string) => {
     // Implement invoice download logic
     // TODO: Add backend integration for invoice download
-    alert('Invoice download will be implemented with backend integration')
+    alert(`Invoice ${invoice} download will be implemented with backend integration`)
   }
 
   if (loading) {

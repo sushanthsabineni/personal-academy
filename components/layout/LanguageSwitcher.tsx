@@ -14,9 +14,8 @@ export function LanguageSwitcher() {
   const [mounted, setMounted] = useState(false)
   
   useEffect(() => {
-    // This pattern is needed for proper client-side hydration
-    // eslint-disable-next-line react-compiler/react-compiler
-    setMounted(true)
+    const frame = requestAnimationFrame(() => setMounted(true))
+    return () => cancelAnimationFrame(frame)
   }, [])
   
   // Default values during SSR

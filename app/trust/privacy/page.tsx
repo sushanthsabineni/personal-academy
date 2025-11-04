@@ -147,8 +147,8 @@ export default function PrivacyPolicyPage() {
               </ul>
               <p className="text-gray-600 text-sm mt-3">
                 <strong>Security Note:</strong> We do NOT store your complete credit/debit card numbers 
-                or CVV codes. All payment processing is handled securely by our payment partners 
-                (Razorpay and Stripe) who are PCI DSS compliant.
+                or CVV codes. All payment processing is handled securely by our payment partner 
+                Razorpay, which is PCI DSS compliant.
               </p>
             </div>
 
@@ -335,7 +335,18 @@ export default function PrivacyPolicyPage() {
                     <p className="font-semibold text-gray-900 capitalize">
                       {key.replace(/([A-Z])/g, ' $1').trim()}
                     </p>
-                    <p className="text-gray-700">{value}</p>
+                    {typeof value === 'object' && value !== null ? (
+                      <ul className="list-disc ml-6 text-gray-700">
+                        {Object.entries(value).map(([subKey, subValue], subIndex) => (
+                          <li key={subIndex}>
+                            <span className="font-medium capitalize">{subKey.replace(/([A-Z])/g, ' $1').trim()}: </span>
+                            <span>{subValue}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-700">{value}</p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -429,9 +440,8 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">International Data Transfers</h2>
             <div className="prose prose-gray max-w-none text-gray-700">
               <p>
-                Your data is primarily stored in India (Supabase India Region). However, some of our 
-                service providers (such as OpenAI for AI processing, and Stripe for international 
-                payments) may process data outside India, including in the United States and European Union.
+                Your data is primarily stored in India (Supabase India Region) to ensure compliance 
+                with Indian data localization requirements.
               </p>
               <p>
                 When we transfer personal data internationally, we ensure appropriate safeguards are in place:
@@ -462,7 +472,6 @@ export default function PrivacyPolicyPage() {
               <ul className="list-disc pl-6 space-y-2">
                 <li><strong>Encryption:</strong> All data in transit is encrypted using TLS/SSL. Sensitive data at rest is encrypted.</li>
                 <li><strong>Access Control:</strong> Role-based access control (RBAC) limits who can access your data.</li>
-                <li><strong>Authentication:</strong> Multi-factor authentication (MFA) support for user accounts.</li>
                 <li><strong>Monitoring:</strong> 24/7 security monitoring and automated threat detection.</li>
                 <li><strong>Audits:</strong> Regular security audits and vulnerability assessments.</li>
                 <li><strong>Backups:</strong> Automated encrypted backups with 90-day retention.</li>

@@ -1,3 +1,11 @@
+// Placeholder Lucide icons for missing imports
+export const ArrowUp = () => null
+export const ArrowDown = () => null
+export const Flag = () => null
+export const MessageSquare = () => null
+export const LayoutDashboard = () => null
+export const Headphones = () => null
+export const Database = () => null
 // Icon barrel export for tree-shaking optimization
 // Only the icons used in the application are exported
 // This reduces bundle size from ~1.5MB to ~100KB
@@ -97,4 +105,7 @@ export { Users } from 'lucide-react'
 export { Video } from 'lucide-react'
 export { Wand2 } from 'lucide-react'
 export { X } from 'lucide-react'
+export { XCircle } from 'lucide-react'
 export { Zap } from 'lucide-react'
+export { ToggleLeft } from 'lucide-react'
+export { ToggleRight } from 'lucide-react'

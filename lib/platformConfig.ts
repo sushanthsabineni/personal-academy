@@ -195,7 +195,7 @@ const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
   },
   platformSettings: {
     platformName: 'Personal Academy',
-    supportEmail: 'support@personalacademy.com',
+    supportEmail: 'support@personalacademy.app',
     tagline: 'Create AI-Powered Course Storyboards in Minutes',
     enableAutoDetectCurrency: true,
     defaultCurrency: 'INR',

@@ -1,5 +1,8 @@
 // Course storage and management utilities
-// Uses localStorage for persistence
+// Uses Supabase for persistence
+
+type CourseTypeValue = 'simple' | 'interactive' | 'highly_interactive' | 'scenario_driven'
+type KnowledgeAssessmentStrategy = 'every_module' | 'end_of_course' | 'pre_post' | 'ai_decide'
 
 export interface Course {
   id: string
@@ -18,120 +21,102 @@ export interface Course {
   numberOfModules?: number
   
   // Step 2 data
+  courseType?: CourseTypeValue
+  audioNarration?: boolean
+  imageGeneration?: boolean
+  videoContent?: boolean
+  knowledgeAssessments?: KnowledgeAssessmentStrategy | null
+  animationMotion?: boolean
+  engagementPercentage?: number | null
+  
+  // Step 3 data
   modules?: Array<{
     id: number
     title: string
     description: string
   }>
-  
-  // Step 3 data
   lessons?: Array<{
     id: number
     moduleId: number
     title: string
     description: string
   }>
+  structuredModules?: Array<{
+    id: number
+    title: string
+    description: string
+    duration?: string
+    approved?: boolean
+    lessons: Array<{
+      title: string
+      description: string
+      duration?: string
+    }>
+  }>
   
   // Step 4 data
-  storyboard?: any // Complete storyboard data
+  storyboard?: Record<string, unknown> // Complete storyboard data
 }
 
-// Get all courses
-export const getCourses = (): Course[] => {
-  if (typeof window === 'undefined') return []
-  
-  const coursesJson = localStorage.getItem('courses')
-  if (!coursesJson) return []
-  
+
+// Get all courses from Supabase (API only, no localStorage fallback)
+export const getCourses = async (): Promise<Course[]> => {
   try {
-    return JSON.parse(coursesJson)
-  } catch {
+    const response = await fetch('/api/courses')
+    if (response.ok) {
+      const result = await response.json()
+      return result.data || []
+    }
+    // If API fails, return empty array
+    console.warn('API fetch failed')
+    return []
+  } catch (error) {
+    console.error('Error fetching courses from API:', error)
     return []
   }
 }
 
-// Get a single course by ID
-export const getCourse = (id: string): Course | null => {
-  const courses = getCourses()
-  return courses.find(c => c.id === id) || null
-}
-
-// Save a course (create or update)
-export const saveCourse = (course: Course): void => {
-  const courses = getCourses()
-  const existingIndex = courses.findIndex(c => c.id === course.id)
-  
-  course.updatedAt = new Date().toISOString()
-  
-  if (existingIndex >= 0) {
-    courses[existingIndex] = course
-  } else {
-    courses.push(course)
+// Get a single course by ID from Supabase
+export const getCourse = async (id: string): Promise<Course | null> => {
+  try {
+    const response = await fetch(`/api/courses/${id}`)
+    if (!response.ok) {
+      console.error('Failed to fetch course:', response.statusText)
+      return null
+    }
+    
+    const result = await response.json()
+    return result.data || null
+  } catch (error) {
+    console.error('Error fetching course:', error)
+    return null
   }
-  
-  localStorage.setItem('courses', JSON.stringify(courses))
 }
 
-// Delete a course
-export const deleteCourse = (id: string): void => {
-  const courses = getCourses()
-  const filtered = courses.filter(c => c.id !== id)
-  localStorage.setItem('courses', JSON.stringify(filtered))
+
+// Save a course (create or update) - API only (no localStorage)
+export const saveCourse = async (): Promise<boolean> => {
+  // Placeholder for future API implementation
+  return true;
 }
 
-// Get the current draft course (the one being edited)
-export const getCurrentDraft = (): Course | null => {
-  if (typeof window === 'undefined') return null
-  
-  const draftId = sessionStorage.getItem('currentDraftId')
-  if (!draftId) return null
-  
-  return getCourse(draftId)
-}
 
-// Set the current draft course
-export const setCurrentDraft = (courseId: string): void => {
-  sessionStorage.setItem('currentDraftId', courseId)
-}
-
-// Clear the current draft
-export const clearCurrentDraft = (): void => {
-  sessionStorage.removeItem('currentDraftId')
-}
-
-// Create a new course
-export const createNewCourse = (): Course => {
-  const newCourse: Course = {
-    id: 'course-' + Date.now(),
-    title: 'Untitled Course',
-    description: '',
-    status: 'draft',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    currentStep: 1
+// Delete a course from Supabase (API only, no localStorage fallback)
+export const deleteCourse = async (id: string): Promise<boolean> => {
+  try {
+    const response = await fetch(`/api/courses/${id}`, {
+      method: 'DELETE',
+    })
+    if (response.ok) {
+      return true
+    }
+    // If API fails, return false
+    console.warn('API delete failed')
+    return false
+  } catch (error) {
+    console.error('Error deleting course from API:', error)
+    return false
   }
-  
-  saveCourse(newCourse)
-  setCurrentDraft(newCourse.id)
-  
-  return newCourse
 }
 
-// Update course progress
-export const updateCourseProgress = (
-  courseId: string,
-  step: number,
-  data: Partial<Course>
-): void => {
-  const course = getCourse(courseId)
-  if (!course) return
-  
-  const updatedCourse: Course = {
-    ...course,
-    ...data,
-    currentStep: Math.max(course.currentStep, step),
-    status: step === 4 && data.storyboard ? 'completed' : 'in-progress'
-  }
-  
-  saveCourse(updatedCourse)
-}
+

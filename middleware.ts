@@ -1,49 +1,80 @@
 // middleware.ts - Authentication & Authorization Middleware
 // Protects authenticated routes and admin routes using Supabase Auth
 
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { Database } from '@/lib/supabase/database.types'
 
+const applySecurityHeaders = (response: NextResponse) => {
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-Frame-Options', 'SAMEORIGIN')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=(), interest-cohort=()'
+  )
+  response.headers.set(
+    'Strict-Transport-Security',
+    'max-age=63072000; includeSubDomains; preload'
+  )
+  return response
+}
+
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient<Database>({ req, res })
+  const res = applySecurityHeaders(NextResponse.next())
+
+  // Create Supabase client for middleware
+  const supabase = createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return req.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            req.cookies.set(name, value)
+            res.cookies.set(name, value, options)
+          })
+        },
+      },
+    }
+  )
 
   const {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // Protect authenticated routes
-  if (req.nextUrl.pathname.startsWith('/dashboard') ||
-      req.nextUrl.pathname.startsWith('/create') ||
-      req.nextUrl.pathname.startsWith('/account')) {
-    
-    if (!session) {
-      // Redirect to login page with return URL
-      const redirectUrl = new URL('/login', req.url)
-      redirectUrl.searchParams.set('redirect', req.nextUrl.pathname)
-      return NextResponse.redirect(redirectUrl)
-    }
+  const requiresAuth =
+    req.nextUrl.pathname.startsWith('/dashboard') ||
+    req.nextUrl.pathname.startsWith('/create') ||
+    req.nextUrl.pathname.startsWith('/account')
+
+  if (requiresAuth && !session) {
+    const redirectUrl = new URL('/login', req.url)
+    redirectUrl.searchParams.set('redirect', req.nextUrl.pathname)
+    return NextResponse.redirect(redirectUrl)
   }
 
-  // Protect admin routes
-  if (req.nextUrl.pathname.startsWith('/admin') && !req.nextUrl.pathname.startsWith('/admin/login')) {
+  if (
+    req.nextUrl.pathname.startsWith('/admin') &&
+    !req.nextUrl.pathname.startsWith('/admin/login')
+  ) {
     if (!session) {
-      // Redirect to admin login
       const redirectUrl = new URL('/admin/login', req.url)
       redirectUrl.searchParams.set('redirect', req.nextUrl.pathname)
       return NextResponse.redirect(redirectUrl)
     }
 
-    // Check admin role from profiles table
-    const { data: profile } = await supabase
+    const { data: profile, error } = await supabase
       .from('profiles')
       .select('is_admin')
       .eq('id', session.user.id)
       .single()
 
-    if (!profile?.is_admin) {
+    if (error || !profile?.is_admin) {
       return NextResponse.redirect(new URL('/', req.url))
     }
   }
@@ -51,12 +82,6 @@ export async function middleware(req: NextRequest) {
   return res
 }
 
-// Configure which routes the middleware should run on
 export const config = {
-  matcher: [
-    '/dashboard/:path*',
-    '/create/:path*',
-    '/account/:path*',
-    '/admin/:path*'
-  ]
+  matcher: ['/dashboard/:path*', '/create/:path*', '/account/:path*', '/admin/:path*'],
 }

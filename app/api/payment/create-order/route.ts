@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Razorpay from 'razorpay'
+import { getPricingPlanById } from '@/lib/supabase/pricing.server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 // Initialize Razorpay
@@ -10,63 +11,77 @@ const razorpay = new Razorpay({
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerSupabaseClient()
-    
-    // Check authentication
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const supabase = await createServerSupabaseClient()
+
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession()
+
+    if (!session || sessionError) {
+      return NextResponse.json(
+        { error: 'Please log in to make a purchase' },
+        { status: 401 },
+      )
     }
 
     const body = await request.json()
-    const { credits, amount, currency = 'INR', tierName } = body
-
-    // Validate input
-    if (!credits || !amount) {
-      return NextResponse.json(
-        { error: 'Credits and amount required' },
-        { status: 400 }
-      )
+    const { tierId } = body as { tierId?: string }
+    if (!tierId) {
+      return NextResponse.json({ error: 'tierId required' }, { status: 400 })
     }
 
-    // Validate Razorpay keys are configured
     if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-      console.error('Razorpay keys not configured')
       return NextResponse.json(
         { error: 'Payment gateway not configured. Please contact support.' },
-        { status: 500 }
+        { status: 500 },
       )
     }
 
-    // Get user profile
+    const plan = await getPricingPlanById(String(tierId))
+    if (!plan) {
+      return NextResponse.json({ error: 'Invalid tierId' }, { status: 400 })
+    }
+
+    const currency = 'INR'
+    const amount = plan.price_in_inr * 100 // paise
+    const credits = plan.credits
+    const tierName = plan.name
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('email, full_name')
       .eq('id', session.user.id)
       .single()
 
-    // Create Razorpay order
     const order = await razorpay.orders.create({
-      amount: amount, // Already in paise/smallest unit
-      currency: currency,
+      amount,
+      currency,
       receipt: `order_${Date.now()}`,
       notes: {
         user_id: session.user.id,
-        credits: credits,
+        credits,
         tier: tierName,
-        email: profile?.email || session.user.email,
+        email: ((profile as any)?.email) || (session.user.email as string),
       },
     })
 
-    // Store order in database (for tracking)
-    await supabase.from('payments').insert({
-      user_id: session.user.id,
-      razorpay_order_id: order.id,
-      amount: amount / 100, // Store in main currency unit
-      currency: currency,
-      credits_purchased: credits,
-      status: 'pending',
-    })
+    const { error: insertError } = await supabase
+      .from('payments')
+      .insert({
+        user_id: session.user.id,
+        razorpay_order_id: order.id,
+        amount: amount / 100,
+        currency,
+        credits_purchased: credits,
+        status: 'pending',
+      } as never)
+
+    if (insertError) {
+      console.error('payment:create-order insert error', insertError)
+    } else {
+      console.info('payment:create-order stored order', { orderId: order.id })
+    }
 
     return NextResponse.json({
       orderId: order.id,
@@ -74,12 +89,11 @@ export async function POST(request: NextRequest) {
       currency: order.currency,
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
     })
-
   } catch (error) {
-    console.error('Order creation error:', error)
+    console.error('payment:create-order error', error)
     return NextResponse.json(
       { error: 'Failed to create order', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

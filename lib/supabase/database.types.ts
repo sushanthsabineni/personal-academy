@@ -21,6 +21,7 @@ export interface Database {
           avatar_url: string | null
           credits_balance: number
           is_premium: boolean
+          is_admin: boolean
           referral_code: string
           referred_by: string | null
           auth_provider: string
@@ -36,6 +37,7 @@ export interface Database {
           avatar_url?: string | null
           credits_balance?: number
           is_premium?: boolean
+          is_admin?: boolean
           referral_code?: string
           referred_by?: string | null
           auth_provider?: string
@@ -47,6 +49,7 @@ export interface Database {
           avatar_url?: string | null
           credits_balance?: number
           is_premium?: boolean
+          is_admin?: boolean
           last_login_at?: string | null
         }
       }
@@ -66,6 +69,12 @@ export interface Database {
           methodology: string | null
           target_location: string | null
           file_notes: string | null
+          audio_narration: boolean | null
+          image_generation: boolean | null
+          video_content: boolean | null
+          animation_motion: boolean | null
+          knowledge_assessments: string | null
+          engagement_percentage: number | null
           created_at: string
           updated_at: string
           completed_at: string | null
@@ -85,6 +94,12 @@ export interface Database {
           methodology?: string | null
           target_location?: string | null
           file_notes?: string | null
+          audio_narration?: boolean | null
+          image_generation?: boolean | null
+          video_content?: boolean | null
+          animation_motion?: boolean | null
+          knowledge_assessments?: string | null
+          engagement_percentage?: number | null
         }
         Update: {
           title?: string
@@ -100,6 +115,12 @@ export interface Database {
           methodology?: string | null
           target_location?: string | null
           file_notes?: string | null
+          audio_narration?: boolean | null
+          image_generation?: boolean | null
+          video_content?: boolean | null
+          animation_motion?: boolean | null
+          knowledge_assessments?: string | null
+          engagement_percentage?: number | null
           deleted_at?: string | null
         }
       }
@@ -128,6 +149,7 @@ export interface Database {
           description?: string | null
           order_index?: number
           is_approved?: boolean
+          ai_generated?: boolean // Added to ensure PATCH requests include this field
         }
       }
       lessons: {
@@ -157,6 +179,7 @@ export interface Database {
           description?: string | null
           order_index?: number
           duration?: number | null
+          ai_generated?: boolean
         }
       }
       slides: {
@@ -211,6 +234,7 @@ export interface Database {
           ai_notes?: string | null
           duration?: number | null
           engagement_score?: number | null
+          ai_generated?: boolean
         }
       }
       credits_transactions: {
@@ -227,6 +251,9 @@ export interface Database {
           referral_id: string | null
           metadata: Json
           created_at: string
+          transaction_type: string | null
+          payment_method: string | null
+          status: string | null
         }
         Insert: {
           user_id: string
@@ -239,12 +266,18 @@ export interface Database {
           course_id?: string | null
           referral_id?: string | null
           metadata?: Json
+          transaction_type?: string | null
+          payment_method?: string | null
+          status?: string | null
         }
         Update: {
           amount?: number
           type?: 'purchase' | 'earned' | 'spent' | 'refund' | 'bonus' | 'referral'
           description?: string
           balance_after?: number
+          transaction_type?: string | null
+          payment_method?: string | null
+          status?: string | null
         }
       }
       referrals: {

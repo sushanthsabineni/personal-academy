@@ -11,12 +11,16 @@ import Image from 'next/image'
 import { supabase } from '@/lib/supabase/client'
 
 // External libraries
-import { Bell, Sun, Moon, Coins, CreditCard, Gift, Settings, LogOut, BookOpen } from '@/lib/icons'
+import { Bell, Sun, Moon, Coins, CreditCard, Gift, Settings, LogOut, HelpCircle } from '@/lib/icons'
+
+// Components
+import NotificationsPanel from './NotificationsPanel'
 
 function HeaderComponent() {
   const router = useRouter()
   const pathname = usePathname()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isNotificationsPanelOpen, setIsNotificationsPanelOpen] = useState(false)
   const [isDark, setIsDark] = useState(() => {
     // Initialize from localStorage if available
     if (typeof window !== 'undefined') {
@@ -31,9 +35,37 @@ function HeaderComponent() {
   const [userEmail, setUserEmail] = useState('')
   const [userPicture, setUserPicture] = useState('')
   const [credits, setCredits] = useState(100)
-  const hasNotifications = false
+  const [notificationCount, setNotificationCount] = useState(0)
 
   const userInitial = userName.charAt(0).toUpperCase()
+
+  // Fetch notification count
+  useEffect(() => {
+    if (!isLoggedIn) return
+
+    // Skip network calls in non-http(s) contexts (e.g., file:// previews)
+    const canFetch = typeof window !== 'undefined' && (window.location?.protocol === 'http:' || window.location?.protocol === 'https:')
+    if (!canFetch) return
+
+    const fetchNotificationCount = async () => {
+      try {
+        const response = await fetch('/api/notifications/unread-count')
+        if (response.ok) {
+          const data = await response.json()
+          setNotificationCount(data.count || 0)
+        }
+      } catch (error) {
+        console.error('Error fetching notification count:', error)
+      }
+    }
+
+    fetchNotificationCount()
+
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(fetchNotificationCount, 30000)
+
+    return () => clearInterval(interval)
+  }, [isLoggedIn])
 
   // Handle theme and authentication on mount and route changes
   useEffect(() => {
@@ -63,9 +95,9 @@ function HeaderComponent() {
             .single()
 
           if (profile) {
-            setUserName(profile.full_name || session.user.email?.split('@')[0] || 'User')
-            setUserPicture(profile.avatar_url || session.user.user_metadata?.avatar_url || '')
-            setCredits(profile.credits_balance || 100)
+            setUserName((profile as any).full_name || session.user.email?.split('@')[0] || 'User')
+            setUserPicture((profile as any).avatar_url || session.user.user_metadata?.avatar_url || '')
+            setCredits((profile as any).credits_balance || 100)
           } else {
             setUserName(session.user.email?.split('@')[0] || 'User')
           }
@@ -129,13 +161,13 @@ function HeaderComponent() {
             className="shrink-0 hover:opacity-80 transition-opacity"
           >
             <Image 
-              src="/logo.png?v=2" 
-              alt="Personal Academy" 
+              src="/logo.webp"
+              alt="Personal Academy"
               width={180}
               height={180}
               priority
               className="h-14 w-auto object-contain"
-              unoptimized
+              style={{ height: 'auto' }}
             />
           </button>
           <div className="flex items-center gap-4">
@@ -159,13 +191,13 @@ function HeaderComponent() {
           className="shrink-0 hover:opacity-80 transition-opacity"
         >
           <Image 
-            src="/logo.png?v=2" 
-            alt="Personal Academy" 
-            width={180}
-            height={180}
+            src="/logo.webp"
+            alt="Personal Academy"
+            width={144}
+            height={144}
             priority
-            className="h-14 w-auto object-contain"
-            unoptimized
+            className="h-11 w-auto object-contain"
+            style={{ height: 'auto' }}
           />
         </button>
 
@@ -175,18 +207,28 @@ function HeaderComponent() {
           {/* Show public navigation ONLY when NOT logged in */}
           {!isLoggedIn && (
             <>
-              {/* Always show Pricing and Refer & Earn when not logged in */}
+              {/* Show Pricing and Refer & Earn only when NOT on landing page */}
+              {pathname !== '/' && (
+                <>
+                  <button
+                    onClick={() => router.push('/pricing')}
+                    className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-brand-teal dark:hover:text-brand-teal font-medium transition-colors"
+                  >
+                    Pricing
+                  </button>
+                  <button
+                    onClick={() => router.push('/refer')}
+                    className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-brand-teal dark:hover:text-brand-teal font-medium transition-colors"
+                  >
+                    Refer & Earn
+                  </button>
+                </>
+              )}
               <button
-                onClick={() => router.push('/pricing')}
+                onClick={() => router.push('/support')}
                 className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-brand-teal dark:hover:text-brand-teal font-medium transition-colors"
               >
-                Pricing
-              </button>
-              <button
-                onClick={() => router.push('/refer')}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-brand-teal dark:hover:text-brand-teal font-medium transition-colors"
-              >
-                Refer & Earn
+                Support
               </button>
               <button
                 onClick={() => router.push('/login')}
@@ -200,17 +242,6 @@ function HeaderComponent() {
           {/* Show authenticated navigation ONLY when logged in */}
           {isLoggedIn && (
             <>
-              {/* Dashboard Button - Hide during course creation flow */}
-              {!pathname.startsWith('/create') && (
-                <button
-                  onClick={() => router.push('/dashboard')}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-brand-teal dark:hover:text-brand-teal font-medium transition-colors flex items-center gap-2"
-                >
-                  <BookOpen size={18} />
-                  Dashboard
-                </button>
-              )}
-
               {/* Credits */}
               <button
                 onClick={() => router.push('/account/credits')}
@@ -221,12 +252,47 @@ function HeaderComponent() {
               </button>
 
               {/* Notifications */}
-              <button className="relative p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                <Bell size={20} className="text-gray-700 dark:text-gray-300" />
-                {hasNotifications && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              <div className="relative">
+                <button 
+                  onClick={() => setIsNotificationsPanelOpen(!isNotificationsPanelOpen)}
+                  className="relative p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                >
+                  <Bell size={20} className="text-gray-700 dark:text-gray-300" />
+                  {notificationCount > 0 && (
+                    <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                      {notificationCount > 99 ? '99+' : notificationCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notifications Panel */}
+                {isNotificationsPanelOpen && (
+                  <>
+                    {/* Backdrop to close panel when clicking outside */}
+                    <div 
+                      className="fixed inset-0 z-[60]" 
+                      onClick={() => setIsNotificationsPanelOpen(false)}
+                    />
+                    <NotificationsPanel
+                      onClose={() => setIsNotificationsPanelOpen(false)}
+                      onUpdate={async () => {
+                        // Refresh notification count
+                        try {
+                          const canFetch = typeof window !== 'undefined' && (window.location?.protocol === 'http:' || window.location?.protocol === 'https:')
+                          if (!canFetch) return
+                          const response = await fetch('/api/notifications/unread-count')
+                          if (response.ok) {
+                            const data = await response.json()
+                            setNotificationCount(data.count || 0)
+                          }
+                        } catch (error) {
+                          console.error('Error refreshing notification count:', error)
+                        }
+                      }}
+                    />
+                  </>
                 )}
-              </button>
+              </div>
             </>
           )}
 
@@ -241,6 +307,16 @@ function HeaderComponent() {
               <Moon size={20} className="text-gray-700 dark:text-gray-300" />
             )}
           </button>
+
+          {/* Dashboard link beside profile icon */}
+          {isLoggedIn && (
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-brand-teal dark:hover:text-brand-teal font-medium transition-colors"
+            >
+              Dashboard
+            </button>
+          )}
 
           {/* User Avatar Dropdown - Show only when logged in */}
           {isLoggedIn && (
@@ -317,6 +393,17 @@ function HeaderComponent() {
                   >
                     <Settings size={16} className="text-gray-600 dark:text-gray-400" />
                     Account Settings
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      router.push('/support')
+                      setIsDropdownOpen(false)
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 cursor-pointer"
+                  >
+                    <HelpCircle size={16} className="text-gray-600 dark:text-gray-400" />
+                    Support
                   </button>
 
                   <div className="border-t border-gray-200 dark:border-slate-700 my-2"></div>

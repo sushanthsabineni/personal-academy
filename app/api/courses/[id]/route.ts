@@ -33,7 +33,7 @@ type RouteParams = {
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
     // Create server-side Supabase client
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     
     // Check authentication
     const { data: { session }, error: authError } = await supabase.auth.getSession()
@@ -89,7 +89,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     }
 
     // Verify user owns this course (RLS should handle this, but double-check)
-    if (course.user_id !== userId) {
+    if (((course as any).user_id) !== userId) {
       return NextResponse.json(
         { error: 'Forbidden - You do not have access to this course' },
         { status: 403 }
@@ -97,12 +97,12 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     }
 
     // Sort nested data by order indices
-    if (course.modules) {
-      course.modules = (course.modules as Module[])
+    if ((course as any).modules) {
+      ;(course as any).modules = ((course as any).modules as Module[])
         .sort((a: Module, b: Module) => a.order_index - b.order_index)
         .map((module: Module) => ({
           ...module,
-          lessons: module.lessons
+            lessons: (module as any).lessons
             ?.sort((a: Lesson, b: Lesson) => a.order_index - b.order_index)
             .map((lesson: Lesson) => ({
               ...lesson,
@@ -113,20 +113,17 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
     // Add computed statistics
     const stats = {
-      total_modules: course.modules?.length || 0,
-      total_lessons: (course.modules as Module[] | undefined)?.reduce((sum: number, m: Module) => sum + (m.lessons?.length || 0), 0) || 0,
-      total_slides: (course.modules as Module[] | undefined)?.reduce((sum: number, m: Module) => 
-        sum + (m.lessons?.reduce((lessonSum: number, l: Lesson) => lessonSum + (l.slides?.length || 0), 0) || 0), 0) || 0,
-      estimated_duration: (course.modules as Module[] | undefined)?.reduce((sum: number, m: Module) => 
-        sum + (m.lessons?.reduce((lessonSum: number, l: Lesson) => lessonSum + (l.duration || 0), 0) || 0), 0) || 0
+      total_modules: ((course as any).modules?.length) || 0,
+      total_lessons: (((course as any).modules as Module[] | undefined)?.reduce((sum: number, m: any) => sum + ((m.lessons as any[])?.length || 0), 0)) || 0,
+      total_slides: (((course as any).modules as Module[] | undefined)?.reduce((sum: number, m: any) => 
+        sum + (((m.lessons as any[])?.reduce((lessonSum: number, l: any) => lessonSum + ((l.slides as any[])?.length || 0), 0)) || 0), 0)) || 0,
+      estimated_duration: (((course as any).modules as Module[] | undefined)?.reduce((sum: number, m: any) => 
+        sum + (((m.lessons as any[])?.reduce((lessonSum: number, l: any) => lessonSum + ((l.duration as number) || 0), 0)) || 0), 0)) || 0
     }
 
     return NextResponse.json({
       success: true,
-      data: {
-        ...course,
-        stats
-      }
+      data: Object.assign({}, course as object, { stats })
     })
 
   } catch (error) {
@@ -146,7 +143,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     // Create server-side Supabase client
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     
     // Check authentication
     const { data: { session }, error: authError } = await supabase.auth.getSession()
@@ -202,7 +199,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Verify ownership
-    if (existingCourse.user_id !== userId) {
+    if (((existingCourse as any).user_id) !== userId) {
       return NextResponse.json(
         { error: 'Forbidden - You do not have permission to update this course' },
         { status: 403 }
@@ -237,7 +234,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       }
 
       // Validate status transitions
-      const currentStatus = existingCourse.status
+      const currentStatus = (existingCourse as any).status
       const newStatus = body.status
 
       // Business logic: Can't go from completed back to draft
@@ -253,6 +250,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       // If status is being set to completed, set completed_at
       if (newStatus === 'completed' && currentStatus !== 'completed') {
         updateData.completed_at = new Date().toISOString()
+        
+        // Send push notification when course is completed
+        import('@/lib/pushNotifications').then(({ sendCourseCompleteNotification }) => {
+          const courseTitle = body.title || (existingCourse as any).title || 'Your course'
+          sendCourseCompleteNotification(userId, courseTitle, courseId).catch(console.error)
+        }).catch(console.error)
       }
     }
 
@@ -305,7 +308,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Perform the update (updated_at is automatically updated by trigger)
     const { data: updatedCourse, error: updateError } = await supabase
       .from('courses')
-      .update(updateData)
+      .update(updateData as never)
       .eq('id', courseId)
       .select(`
         *,
@@ -348,7 +351,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
     // Create server-side Supabase client
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     
     // Check authentication
     const { data: { session }, error: authError } = await supabase.auth.getSession()
@@ -392,7 +395,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     }
 
     // Verify ownership
-    if (existingCourse.user_id !== userId) {
+    if (((existingCourse as any).user_id) !== userId) {
       return NextResponse.json(
         { error: 'Forbidden - You do not have permission to delete this course' },
         { status: 403 }
@@ -400,7 +403,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     }
 
     // Check if already deleted
-    if (existingCourse.deleted_at) {
+    if (((existingCourse as any).deleted_at)) {
       return NextResponse.json(
         { error: 'Course has already been deleted' },
         { status: 410 } // 410 Gone
@@ -410,7 +413,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     // Perform soft delete
     const { error: deleteError } = await supabase
       .from('courses')
-      .update({ deleted_at: new Date().toISOString() })
+      .update({ deleted_at: new Date().toISOString() } as never)
       .eq('id', courseId)
 
     if (deleteError) {

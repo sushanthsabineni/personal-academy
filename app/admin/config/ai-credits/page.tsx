@@ -13,9 +13,13 @@ export default function AICreditConfigPage() {
   const [showSuccess, setShowSuccess] = useState(false)
 
   useEffect(() => {
-    if (!isAdmin()) {
-      router.push('/admin/login')
+    const checkAuth = async () => {
+      const adminStatus = await isAdmin()
+      if (!adminStatus) {
+        router.push('/admin/login')
+      }
     }
+    checkAuth()
   }, [router])
 
   const handleChange = (field: keyof AICreditRates, value: number) => {

@@ -164,10 +164,6 @@ export default function TrustCenterPage() {
                   <CheckCircle className="w-3 h-3 text-green-500" />
                   <span>Regular security audits</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-3 h-3 text-green-500" />
-                  <span>Multi-factor authentication</span>
-                </li>
               </ul>
             </div>
 

@@ -1,18 +1,33 @@
 'use client'
 
 // React
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // Next.js
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 // External libraries
-import { ChevronLeft, ChevronRight, BookOpen, Image as ImageIcon, Layers, Film, Edit3, Eye, Rocket, Lock } from '@/lib/icons'
+import { ChevronLeft, ChevronRight, BookOpen, Image as ImageIcon, Layers, Film, Edit3, Eye, Rocket, Lock, Sparkles } from '@/lib/icons'
 
 export function CreateCourseSidebar() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
+
+  // Keep main content offset in sync with sidebar width
+  useEffect(() => {
+    const root = document.documentElement
+    root.style.setProperty('--create-sidebar-width', '5rem')
+
+    return () => {
+      root.style.removeProperty('--create-sidebar-width')
+    }
+  }, [])
+
+  useEffect(() => {
+    const root = document.documentElement
+    root.style.setProperty('--create-sidebar-width', isOpen ? '16rem' : '5rem')
+  }, [isOpen])
 
   const steps = [
     { id: 1, label: 'Course Info', icon: BookOpen, href: '/create/essentials' },
@@ -22,9 +37,10 @@ export function CreateCourseSidebar() {
   ]
 
   const comingSoon = [
-    { id: 5, label: 'Course Developer', icon: Edit3, href: '/coming-soon' },
-    { id: 6, label: 'SME Review', icon: Eye, href: '/coming-soon' },
-    { id: 7, label: 'Publish', icon: Rocket, href: '/coming-soon' },
+    { id: 5, label: 'AI Asset Builder', icon: Sparkles, href: '/coming-soon' },
+    { id: 6, label: 'Course Developer', icon: Edit3, href: '/coming-soon' },
+    { id: 7, label: 'SME Review', icon: Eye, href: '/coming-soon' },
+    { id: 8, label: 'Publish', icon: Rocket, href: '/coming-soon' },
   ]
 
   return (
@@ -36,7 +52,7 @@ export function CreateCourseSidebar() {
       {/* Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="absolute -right-4 top-4 p-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-all shadow-md"
+        className="absolute -right-4 top-1/2 -translate-y-1/2 p-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-all shadow-md"
       >
         {isOpen ? (
           <ChevronLeft size={18} className="text-brand-teal" />

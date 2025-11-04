@@ -6,51 +6,127 @@ import { useEffect, useState } from 'react'
 // Next.js
 import { useRouter } from 'next/navigation'
 
+// Supabase
+import { supabase } from '@/lib/supabase/client'
+
 // External libraries
 import { Clock, BookOpen, Zap, Cpu, Plus, FileText, Trash2, Edit, Crown, Lock, Info } from '@/lib/icons'
 
 // Internal utilities
-import { getCourses, deleteCourse, setCurrentDraft, type Course, createNewCourse } from '@/lib/courseStorage'
-import { isPremiumUser, canCreateMoreCourses, getCourseLimit } from '@/lib/auth'
+import { getCourses, deleteCourse, type Course } from '@/lib/courseStorage'
 
 export default function DashboardPage() {
   const router = useRouter()
   const [courses, setCourses] = useState<Course[]>([])
   const [isPremium, setIsPremium] = useState(false)
+  const [userName, setUserName] = useState('User')
+  const [creditsRemaining, setCreditsRemaining] = useState(100)
+  const [aiGenerationsUsed, setAiGenerationsUsed] = useState(0)
+  const [isCreatingCourse, setIsCreatingCourse] = useState(false)
 
   useEffect(() => {
-    // Load courses from storage
-    setCourses(getCourses())
-    setIsPremium(isPremiumUser())
+    const loadUserData = async () => {
+      try {
+        // Get current user session
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session?.user) {
+          // Fetch user profile from database
+
+          type Profile = {
+            full_name: string | null;
+            credits_balance: number;
+            is_premium: boolean;
+          };
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('full_name, credits_balance, is_premium')
+            .eq('id', session.user.id)
+            .single<Profile>();
+
+          if (error) {
+            console.error('dashboard: profile fetch error', error)
+          } else if (profile) {
+            setUserName(profile.full_name || session.user.email?.split('@')[0] || 'User')
+            setCreditsRemaining(profile.credits_balance || 100)
+            setIsPremium(profile.is_premium || false)
+          }
+
+          // Fetch AI generations count for this user
+          const { count, error: genError } = await supabase
+            .from('ai_generations')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', session.user.id)
+
+          if (genError) {
+            console.error('dashboard: ai_generations count error', genError)
+          } else {
+            setAiGenerationsUsed(count || 0)
+          }
+        }
+
+        // Load courses from Supabase (user-specific)
+        const userCourses = await getCourses()
+        setCourses(userCourses)
+
+      } catch (error) {
+        console.error('dashboard: data load error', error)
+
+      }
+    }
+
+    loadUserData()
   }, [])
 
-  // Mock user data
-  const userName = 'John'
   const coursesCreated = courses.length
   const timeSaved = coursesCreated * 56 // Approximate hours saved
-  const creditsUsed = 750
-  const creditsTotal = 1000
-  const creditsRemaining = creditsTotal - creditsUsed
-  const aiGenerationsUsed = 47
-  const canCreateMore = canCreateMoreCourses(coursesCreated)
-  const courseLimit = getCourseLimit()
+  const courseLimit = isPremium ? Infinity : 3
+  const canCreateMore = coursesCreated < courseLimit
 
-  const handleCreateCourse = () => {
+  const handleCreateCourse = async () => {
+    // Prevent multiple clicks
+    if (isCreatingCourse) {
+      console.log('Already creating a course, ignoring click')
+      return
+    }
     // Check if user can create more courses
     if (!canCreateMore) {
       const limitText = courseLimit === Infinity ? 'unlimited' : courseLimit
       alert(`Free users can only create up to ${limitText} courses. Please upgrade to Premium for unlimited courses!`)
       return
     }
-    
-    // Create a new course and navigate to essentials
-    const newCourse = createNewCourse()
-    router.push('/create/essentials')
+    console.log('Creating new course...')
+    setIsCreatingCourse(true)
+    try {
+      // Create new draft course via API
+      const response = await fetch('/api/courses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'Untitled Course',
+          status: 'draft',
+          current_step: 1
+        })
+      });
+      const result = await response.json();
+      if (!response.ok || !result?.data?.id) {
+        console.error('Failed to create course:', result?.error || result);
+        alert('Failed to create course. Please try again.');
+        setIsCreatingCourse(false);
+        return;
+      }
+      // Navigate to essentials with course ID
+      await new Promise(resolve => setTimeout(resolve, 100));
+      router.push(`/create/essentials?id=${result.data.id}`);
+    } catch (error) {
+      console.error('Failed to create course:', error);
+      alert('Failed to create course. Please try again.');
+      setIsCreatingCourse(false);
+    }
+    // Note: Don't set isCreatingCourse to false here because we're navigating away
   }
 
   const handleEditCourse = (course: Course) => {
-    // Set as current draft and navigate to the appropriate step
-    setCurrentDraft(course.id)
     const stepMap: Record<number, string> = {
       1: 'essentials',
       2: 'multimedia',
@@ -61,10 +137,13 @@ export default function DashboardPage() {
     router.push(`/create/${stepName}`)
   }
 
-  const handleDeleteCourse = (courseId: string) => {
+  const handleDeleteCourse = async (courseId: string) => {
     if (confirm('Are you sure you want to delete this course?')) {
-      deleteCourse(courseId)
-      setCourses(getCourses())
+      const success = await deleteCourse(courseId)
+      if (success) {
+        const updatedCourses = await getCourses()
+        setCourses(updatedCourses)
+      }
     }
   }
 
@@ -116,7 +195,7 @@ export default function DashboardPage() {
         <div className="mb-12 flex items-center justify-between">
           <div>
             <h1 className="text-4xl md:text-5xl font-bold mb-2 text-gray-900 dark:text-white">
-              Welcome back, {userName}!
+              Welcome {userName}!
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-400">
               Here&apos;s what&apos;s happening with your courses today
@@ -124,10 +203,24 @@ export default function DashboardPage() {
           </div>
           <button
             onClick={handleCreateCourse}
-            className="px-6 py-3 bg-brand-teal hover:bg-brand-cyan text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105 flex items-center gap-2"
+            disabled={isCreatingCourse}
+            className={`px-6 py-3 font-semibold rounded-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105 flex items-center gap-2 ${
+              isCreatingCourse
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-brand-teal hover:bg-brand-cyan text-white'
+            }`}
           >
-            <Plus size={20} />
-            Create Course
+            {isCreatingCourse ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                Creating...
+              </>
+            ) : (
+              <>
+                <Plus size={20} />
+                Create Course
+              </>
+            )}
           </button>
         </div>
 
@@ -222,15 +315,24 @@ export default function DashboardPage() {
               </p>
               <button
                 onClick={handleCreateCourse}
-                disabled={!canCreateMore}
+                disabled={!canCreateMore || isCreatingCourse}
                 className={`px-6 py-3 font-semibold rounded-lg shadow-md hover:shadow-lg transition-all inline-flex items-center gap-2 ${
-                  canCreateMore 
+                  canCreateMore && !isCreatingCourse
                     ? 'bg-brand-teal hover:bg-brand-cyan text-white transform hover:scale-105' 
                     : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                 }`}
               >
-                {canCreateMore ? <Plus size={20} /> : <Lock size={20} />}
-                {canCreateMore ? 'Create Course' : 'Limit Reached - Upgrade'}
+                {isCreatingCourse ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    {canCreateMore ? <Plus size={20} /> : <Lock size={20} />}
+                    {canCreateMore ? 'Create Course' : 'Limit Reached - Upgrade'}
+                  </>
+                )}
               </button>
             </div>
           ) : (

@@ -10,6 +10,7 @@ import CookieConsent from '@/components/layout/CookieConsent'
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
 import { RouteGuard } from '@/components/layout/RouteGuard'
 import RazorpayScript from '@/components/RazorpayScript'
+import ServiceWorkerRegistration from '@/components/layout/ServiceWorkerRegistration'
 
 // Internal utilities
 import { I18nProvider } from '@/lib/i18n/useTranslation'
@@ -122,6 +123,7 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning
       className={`${inter.variable} ${spaceGrotesk.variable}`}
+      data-scroll-behavior="smooth"
     >
       <head>
         <script
@@ -159,6 +161,8 @@ export default function RootLayout({
         )}
         {/* Razorpay Payment Gateway Script */}
         <RazorpayScript />
+        {/* Service Worker Registration for Push Notifications */}
+        <ServiceWorkerRegistration />
       </body>
     </html>
   )

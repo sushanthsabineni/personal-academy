@@ -6,24 +6,13 @@
 
 // Auth functions
 export {
-  login,
-  logout,
-  isAuthenticated,
   isProtectedRoute,
-  getUserInfo,
-  isPremiumUser,
-  canCreateMoreCourses
 } from './auth'
 
 // Course storage functions
 export {
   getCourses,
-  getCurrentDraft,
-  setCurrentDraft,
-  updateCourseProgress,
-  createNewCourse,
   deleteCourse,
-  clearCurrentDraft,
   type Course
 } from './courseStorage'
 

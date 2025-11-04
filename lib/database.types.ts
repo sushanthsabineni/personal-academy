@@ -1,6 +1,3 @@
-// TypeScript types for Supabase schema
-// Based on DATABASE_SCHEMA.md
-
 export type Json =
   | string
   | number
@@ -12,43 +9,6 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      profiles: {
-        Row: {
-          id: string
-          email: string
-          full_name: string | null
-          avatar_url: string | null
-          credits_balance: number
-          is_premium: boolean
-          referral_code: string
-          referred_by: string | null
-          auth_provider: string
-          email_verified: boolean
-          last_login_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id: string
-          email: string
-          full_name?: string | null
-          avatar_url?: string | null
-          credits_balance?: number
-          is_premium?: boolean
-          referral_code?: string
-          referred_by?: string | null
-          auth_provider?: string
-          email_verified?: boolean
-          last_login_at?: string | null
-        }
-        Update: {
-          full_name?: string | null
-          avatar_url?: string | null
-          credits_balance?: number
-          is_premium?: boolean
-          last_login_at?: string | null
-        }
-      }
       courses: {
         Row: {
           id: string
@@ -57,6 +17,8 @@ export interface Database {
           description: string | null
           status: 'draft' | 'in_progress' | 'completed' | 'archived'
           current_step: number
+
+          // Step 1 fields
           industry: string | null
           target_audience: string | null
           knowledge_level: 'beginner' | 'intermediate' | 'advanced' | 'expert' | null
@@ -65,43 +27,30 @@ export interface Database {
           methodology: string | null
           target_location: string | null
           file_notes: string | null
+          number_of_modules: number | null
+          number_of_lessons_per_module: number | null
+          expected_duration_unit: 'minutes' | 'hours' | null
+          reference_links: string | null
+          file_description: string | null
+
+          // Step 2 fields
+          course_type: 'simple' | 'interactive' | 'highly_interactive' | 'scenario_driven' | null
+          audio_narration: boolean
+          image_generation: boolean
+          video_content: boolean
+          knowledge_assessments: 'every_module' | 'end_of_course' | 'pre_post' | 'ai_decide' | null
+          animation_motion: boolean
+          engagement_percentage: number | null
+
           created_at: string
           updated_at: string
           completed_at: string | null
           deleted_at: string | null
         }
-        Insert: {
-          user_id: string
-          title: string
-          description?: string | null
-          status?: 'draft' | 'in_progress' | 'completed' | 'archived'
-          current_step?: number
-          industry?: string | null
-          target_audience?: string | null
-          knowledge_level?: 'beginner' | 'intermediate' | 'advanced' | 'expert' | null
-          learning_outcomes?: string | null
-          duration?: number | null
-          methodology?: string | null
-          target_location?: string | null
-          file_notes?: string | null
-        }
-        Update: {
-          title?: string
-          description?: string | null
-          status?: 'draft' | 'in_progress' | 'completed' | 'archived'
-          current_step?: number
-          completed_at?: string | null
-          industry?: string | null
-          target_audience?: string | null
-          knowledge_level?: 'beginner' | 'intermediate' | 'advanced' | 'expert' | null
-          learning_outcomes?: string | null
-          duration?: number | null
-          methodology?: string | null
-          target_location?: string | null
-          file_notes?: string | null
-          deleted_at?: string | null
-        }
+        Insert: Omit<Row, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Insert>
       }
+
       modules: {
         Row: {
           id: string
@@ -109,317 +58,122 @@ export interface Database {
           title: string
           description: string | null
           order_index: number
-          is_approved: boolean
           ai_generated: boolean
+          approved: boolean
+          approved_at: string | null
+          approved_by: string | null
           created_at: string
           updated_at: string
         }
-        Insert: {
-          course_id: string
-          title: string
-          description?: string | null
-          order_index: number
-          is_approved?: boolean
-          ai_generated?: boolean
-        }
-        Update: {
-          title?: string
-          description?: string | null
-          order_index?: number
-          is_approved?: boolean
-        }
+        Insert: Omit<Row, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Insert>
       }
+
       lessons: {
         Row: {
           id: string
           module_id: string
-          course_id: string
           title: string
           description: string | null
           order_index: number
-          duration: number | null
+          estimated_duration: number | null
           ai_generated: boolean
+          approved: boolean
+          approved_at: string | null
+          approved_by: string | null
           created_at: string
           updated_at: string
         }
-        Insert: {
-          module_id: string
-          course_id: string
-          title: string
-          description?: string | null
-          order_index: number
-          duration?: number | null
-          ai_generated?: boolean
-        }
-        Update: {
-          title?: string
-          description?: string | null
-          order_index?: number
-          duration?: number | null
-        }
+        Insert: Omit<Row, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Insert>
       }
+
       slides: {
         Row: {
           id: string
           lesson_id: string
-          module_id: string
-          course_id: string
           slide_number: number
           title: string | null
           learning_objective: string | null
-          content: string | null
-          media_notes: string | null
+          duration: number | null // seconds
+          engagement_score: number | null
+
+          // Content fields
+          on_screen_content: string | null
+          narration_script: string | null
+          visual_assets_notes: string | null
+          interactive_components: {
+            type: string
+            config: Record<string, unknown>
+          }[] | null
+
+          // Assessment
           interaction_type: string | null
           assessment_type: string | null
-          color: string
-          narration: string | null
-          ai_notes: string | null
-          duration: number | null
-          engagement_score: number | null
-          ai_generated: boolean
+          assessment_data: {
+            question: string
+            options: string[]
+            correct_answer: string | number
+            feedback: Record<string, string>
+          } | null
+
+          // Technical
+          navigation_flow: string | null
+          developer_notes: string | null
+          file_format_compatibility: string[] | null
+
+          // Approval
+          approved: boolean
+          approved_at: string | null
+          approved_by: string | null
+
           created_at: string
           updated_at: string
         }
-        Insert: {
-          lesson_id: string
-          module_id: string
-          course_id: string
-          slide_number: number
-          title?: string | null
-          learning_objective?: string | null
-          content?: string | null
-          media_notes?: string | null
-          interaction_type?: string | null
-          assessment_type?: string | null
-          color?: string
-          narration?: string | null
-          ai_notes?: string | null
-          duration?: number | null
-          engagement_score?: number | null
-          ai_generated?: boolean
-        }
-        Update: {
-          title?: string | null
-          learning_objective?: string | null
-          content?: string | null
-          media_notes?: string | null
-          interaction_type?: string | null
-          assessment_type?: string | null
-          color?: string
-          narration?: string | null
-          ai_notes?: string | null
-          duration?: number | null
-          engagement_score?: number | null
-        }
+        Insert: Omit<Row, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Insert>
       }
-      credits_transactions: {
-        Row: {
-          id: string
-          user_id: string
-          amount: number
-          type: 'purchase' | 'earned' | 'spent' | 'refund' | 'bonus' | 'referral'
-          description: string
-          balance_after: number
-          invoice_number: string | null
-          payment_id: string | null
-          course_id: string | null
-          referral_id: string | null
-          metadata: Json
-          created_at: string
-        }
-        Insert: {
-          user_id: string
-          amount: number
-          type: 'purchase' | 'earned' | 'spent' | 'refund' | 'bonus' | 'referral'
-          description: string
-          balance_after: number
-          invoice_number?: string | null
-          payment_id?: string | null
-          course_id?: string | null
-          referral_id?: string | null
-          metadata?: Json
-        }
-        Update: {
-          amount?: number
-          type?: 'purchase' | 'earned' | 'spent' | 'refund' | 'bonus' | 'referral'
-          description?: string
-          balance_after?: number
-        }
-      }
-      referrals: {
-        Row: {
-          id: string
-          referrer_id: string
-          referee_id: string
-          referral_code: string
-          status: 'pending' | 'completed' | 'expired'
-          referrer_bonus_credits: number
-          referee_bonus_credits: number
-          referee_first_purchase_at: string | null
-          referee_first_purchase_amount: number | null
-          created_at: string
-          completed_at: string | null
-        }
-        Insert: {
-          referrer_id: string
-          referee_id: string
-          referral_code: string
-          status?: 'pending' | 'completed' | 'expired'
-          referrer_bonus_credits?: number
-          referee_bonus_credits?: number
-        }
-        Update: {
-          status?: 'pending' | 'completed' | 'expired'
-          referrer_bonus_credits?: number
-          referee_bonus_credits?: number
-          referee_first_purchase_at?: string | null
-          referee_first_purchase_amount?: number | null
-          completed_at?: string | null
-        }
-      }
-      payments: {
-        Row: {
-          id: string
-          user_id: string
-          stripe_payment_intent_id: string
-          stripe_customer_id: string | null
-          stripe_payment_method_id: string | null
-          amount: number
-          currency: string
-          credits_purchased: number
-          status: 'pending' | 'processing' | 'succeeded' | 'failed' | 'refunded' | 'canceled'
-          payment_method_type: string | null
-          card_last4: string | null
-          card_brand: string | null
-          receipt_url: string | null
-          invoice_number: string | null
-          metadata: Json
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          user_id: string
-          stripe_payment_intent_id: string
-          amount: number
-          currency: string
-          credits_purchased: number
-          status?: 'pending' | 'processing' | 'succeeded' | 'failed' | 'refunded' | 'canceled'
-          stripe_customer_id?: string | null
-          stripe_payment_method_id?: string | null
-          payment_method_type?: string | null
-          card_last4?: string | null
-          card_brand?: string | null
-          receipt_url?: string | null
-          invoice_number?: string | null
-          metadata?: Json
-        }
-        Update: {
-          status?: 'pending' | 'processing' | 'succeeded' | 'failed' | 'refunded' | 'canceled'
-          stripe_customer_id?: string | null
-          stripe_payment_method_id?: string | null
-          payment_method_type?: string | null
-          card_last4?: string | null
-          card_brand?: string | null
-          receipt_url?: string | null
-        }
-      }
+
       file_uploads: {
         Row: {
           id: string
           user_id: string
           course_id: string | null
           file_name: string
-          file_size: number
-          file_type: string
-          storage_path: string
-          upload_status: 'pending' | 'processing' | 'completed' | 'failed'
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          user_id: string
-          course_id?: string | null
-          file_name: string
-          file_size: number
-          file_type: string
-          storage_path: string
-          upload_status?: 'pending' | 'processing' | 'completed' | 'failed'
-        }
-        Update: {
-          upload_status?: 'pending' | 'processing' | 'completed' | 'failed'
-        }
-      }
-      ai_generations: {
-        Row: {
-          id: string
-          user_id: string
-          course_id: string | null
-          generation_type: string
-          prompt_text: string | null
-          response_text: string | null
-          tokens_used: number
-          credits_spent: number
-          model_version: string
+          file_url: string | null
+          file_type: string | null
+          file_size: number | null
+          file_description: string | null
+          processing_status: 'pending' | 'processing' | 'completed' | 'failed'
+          processing_error: string | null
+          extracted_text: string | null
+          metadata: Record<string, unknown> | null
           created_at: string
         }
-        Insert: {
-          user_id: string
-          course_id?: string | null
-          generation_type: string
-          prompt_text?: string | null
-          response_text?: string | null
-          tokens_used: number
-          credits_spent: number
-          model_version: string
-        }
-        Update: {
-          response_text?: string | null
-          tokens_used?: number
-          credits_spent?: number
-        }
+        Insert: Omit<Row, 'id' | 'created_at'>
+        Update: Partial<Insert>
       }
     }
-    Functions: {
-      get_user_credits: {
-        Args: { user_uuid: string }
-        Returns: number
-      }
-      update_credit_balance: {
-        Args: {
-          user_uuid: string
-          amount_change: number
-          transaction_type: string
-          transaction_description: string
-          related_payment_id?: string | null
-          related_course_id?: string | null
+
+    Views: {
+      course_details_view: {
+        Row: {
+          course_id: string
+          title: string
+          user_id: string
+          status: string
+          current_step: number
+          number_of_modules: number | null
+          number_of_lessons_per_module: number | null
+          engagement_percentage: number | null
+          modules_count: number
+          lessons_count: number
+          slides_count: number
+          files_count: number
+          approved_modules: number
+          approved_lessons: number
+          approved_slides: number
         }
-        Returns: boolean
-      }
-      get_course_stats: {
-        Args: { course_uuid: string }
-        Returns: {
-          total_modules: number
-          total_lessons: number
-          total_slides: number
-          estimated_duration: number
-        }
-      }
-      get_referral_stats: {
-        Args: { user_uuid: string }
-        Returns: {
-          total_referrals: number
-          completed_referrals: number
-          pending_referrals: number
-          total_credits_earned: number
-        }
-      }
-      process_referral_bonus: {
-        Args: {
-          referee_uuid: string
-          purchase_amount: number
-          purchase_credits: number
-        }
-        Returns: boolean
       }
     }
   }

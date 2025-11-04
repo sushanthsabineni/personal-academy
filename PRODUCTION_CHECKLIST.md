@@ -256,7 +256,7 @@ export async function adminLogin(email: string, password: string) {
 -- Create admin user (after they sign up normally)
 UPDATE profiles 
 SET is_admin = TRUE, admin_role = 'super-admin'
-WHERE email = 'admin@personalacademy.com';
+WHERE email = 'support@personalacademy.app';
 ```
 
 ---

@@ -1,5 +1,7 @@
 // Admin authentication utilities
-// Separate from regular user auth for security
+// Uses Supabase authentication for secure admin access
+
+import { supabase } from '@/lib/supabase/client'
 
 export interface AdminUser {
   id: string
@@ -9,52 +11,57 @@ export interface AdminUser {
   lastLogin?: string
 }
 
-// In production, this should be environment variables
-const ADMIN_CREDENTIALS = {
-  email: 'admin@personalacademy.com',
-  password: 'admin123', // Change this in production!
-  name: 'Admin User',
-  role: 'super-admin' as const
-}
-
-export const isAdmin = (): boolean => {
-  if (typeof window === 'undefined') return false
-  
-  const adminToken = localStorage.getItem('adminToken')
-  return adminToken !== null && adminToken !== ''
-}
-
-export const adminLogin = (email: string, password: string): boolean => {
-  // In production, this should verify against a secure backend
-  if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
-    const adminUser: AdminUser = {
-      id: 'admin-1',
-      email: ADMIN_CREDENTIALS.email,
-      name: ADMIN_CREDENTIALS.name,
-      role: ADMIN_CREDENTIALS.role,
-      lastLogin: new Date().toISOString()
-    }
-    
-    localStorage.setItem('adminToken', 'admin-token-' + Date.now())
-    localStorage.setItem('adminUser', JSON.stringify(adminUser))
-    return true
-  }
-  return false
-}
-
-export const adminLogout = () => {
-  localStorage.removeItem('adminToken')
-  localStorage.removeItem('adminUser')
-}
-
-export const getAdminUser = (): AdminUser | null => {
-  if (typeof window === 'undefined') return null
-  
-  const adminUserStr = localStorage.getItem('adminUser')
-  if (!adminUserStr) return null
-  
+export const isAdmin = async (): Promise<boolean> => {
   try {
-    return JSON.parse(adminUserStr)
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) return false
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single()
+
+    // @ts-expect-error - is_admin might not be in type
+    return profile?.is_admin === true
+  } catch {
+    return false
+  }
+}
+
+export const adminLogout = async () => {
+  try {
+    await supabase.auth.signOut()
+  } catch (error) {
+    console.error('Error logging out:', error)
+  }
+}
+
+export const getAdminUser = async (): Promise<AdminUser | null> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) return null
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin, full_name, email')
+      .eq('id', user.id)
+      .single()
+
+    // @ts-expect-error - is_admin might not be in type
+    if (!profile?.is_admin) return null
+
+    return {
+      id: user.id,
+      // @ts-expect-error - email might not be in type
+      email: profile.email || user.email || '',
+      // @ts-expect-error - full_name might not be in type
+      name: profile.full_name || user.user_metadata?.full_name || 'Admin',
+      role: 'admin',
+      lastLogin: user.last_sign_in_at || undefined
+    }
   } catch {
     return null
   }

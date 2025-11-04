@@ -1,0 +1,72 @@
+{
+  "cookies": [
+    {
+      "name": "_ga",
+      "value": "GA1.1.1480798391.1762072497",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1796632500.671641,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "rzp_unified_session_id",
+      "value": "Rao7fXXbqgNBpJ",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1762074296,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "sb-ajnactqadrohplimjnze-auth-token",
+      "value": "base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWtSeGR5OXBTa2x5VFVGelVqZHpjbVVpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDJGcWJtRmpkSEZoWkhKdmFIQnNhVzFxYm5wbExuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSTBNRGM1WldFNU15MDBPV1V5TFRSbE9ERXRZakEyTlMweE56SmtOVE13TldKalpEa2lMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpZeU1EYzJNRGs0TENKcFlYUWlPakUzTmpJd056STBPVGdzSW1WdFlXbHNJam9pY0dGaGNIQkFlVzl3YldGcGJDNWpiMjBpTENKd2FHOXVaU0k2SWlJc0ltRndjRjl0WlhSaFpHRjBZU0k2ZXlKd2NtOTJhV1JsY2lJNkltVnRZV2xzSWl3aWNISnZkbWxrWlhKeklqcGJJbVZ0WVdsc0lsMTlMQ0oxYzJWeVgyMWxkR0ZrWVhSaElqcDdJbVZ0WVdsc0lqb2ljR0ZoY0hCQWVXOXdiV0ZwYkM1amIyMGlMQ0psYldGcGJGOTJaWEpwWm1sbFpDSTZkSEoxWlN3aWNHaHZibVZmZG1WeWFXWnBaV1FpT21aaGJITmxMQ0p6ZFdJaU9pSTBNRGM1WldFNU15MDBPV1V5TFRSbE9ERXRZakEyTlMweE56SmtOVE13TldKalpEa2lmU3dpY205c1pTSTZJbUYxZEdobGJuUnBZMkYwWldRaUxDSmhZV3dpT2lKaFlXd3hJaXdpWVcxeUlqcGJleUp0WlhSb2IyUWlPaUp3WVhOemQyOXlaQ0lzSW5ScGJXVnpkR0Z0Y0NJNk1UYzJNakEzTWpRNU9IMWRMQ0p6WlhOemFXOXVYMmxrSWpvaVl6Um1NRFkxTjJZdE1HTXhaQzAwTW1VeExUbG1NR010Tm1abVkyRTRaVGxtWkdJNUlpd2lhWE5mWVc1dmJubHRiM1Z6SWpwbVlXeHpaWDAuNmtFTnFoWG1jdEFySWxzN0ItZWcxcnoyck5BUUVNdEZzVk5IdGZOa2tCYyIsInRva2VuX3R5cGUiOiJiZWFyZXIiLCJleHBpcmVzX2luIjozNjAwLCJleHBpcmVzX2F0IjoxNzYyMDc2MDk4LCJyZWZyZXNoX3Rva2VuIjoiczRrZXh6MjJ4emJxIiwidXNlciI6eyJpZCI6IjQwNzllYTkzLTQ5ZTItNGU4MS1iMDY1LTE3MmQ1MzA1YmNkOSIsImF1ZCI6ImF1dGhlbnRpY2F0ZWQiLCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImVtYWlsIjoicGFhcHBAeW9wbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTExLTAyVDA4OjM0OjU1Ljg0MjkzNVoiLCJwaG9uZSI6IiIsImNvbmZpcm1lZF9hdCI6IjIwMjUtMTEtMDJUMDg6MzQ6NTUuODQyOTM1WiIsImxhc3Rfc2lnbl9pbl9hdCI6IjIwMjUtMTEtMDJUMDg6MzQ6NTguNjY2OTgzNTY3WiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoicGFhcHBAeW9wbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJzdWIiOiI0MDc5ZWE5My00OWUyLTRlODEtYjA2NS0xNzJkNTMwNWJjZDkifSwiaWRlbnRpdGllcyI6W3siaWRlbnRpdHlfaWQiOiI0YWYzMDY3Yi0zOWM1LTQ2OGUtOWQ4ZC0yNzdlZjk2ZTYwNzMiLCJpZCI6IjQwNzllYTkzLTQ5ZTItNGU4MS1iMDY1LTE3MmQ1MzA1YmNkOSIsInVzZXJfaWQiOiI0MDc5ZWE5My00OWUyLTRlODEtYjA2NS0xNzJkNTMwNWJjZDkiLCJpZGVudGl0eV9kYXRhIjp7ImVtYWlsIjoicGFhcHBAeW9wbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJzdWIiOiI0MDc5ZWE5My00OWUyLTRlODEtYjA2NS0xNzJkNTMwNWJjZDkifSwicHJvdmlkZXIiOiJlbWFpbCIsImxhc3Rfc2lnbl9pbl9hdCI6IjIwMjUtMTAtMjRUMjA6MDM6NTAuNzI1NTk3WiIsImNyZWF0ZWRfYXQiOiIyMDI1LTEwLTI0VDIwOjAzOjUwLjcyNTY1MloiLCJ1cGRhdGVkX2F0IjoiMjAyNS0xMC0yNFQyMDowMzo1MC43MjU2NTJaIiwiZW1haWwiOiJwYWFwcEB5b3BtYWlsLmNvbSJ9XSwiY3JlYXRlZF9hdCI6IjIwMjUtMTAtMjRUMjA6MDM6NTAuNjk4MjMxWiIsInVwZGF0ZWRfYXQiOiIyMDI1LTExLTAyVDA4OjM0OjU4LjY4MzM1M1oiLCJpc19hbm9ueW1vdXMiOmZhbHNlfSwid2Vha19wYXNzd29yZCI6bnVsbH0",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1796632498.732467,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ga_XXXXXXXXXX",
+      "value": "GS2.1.s1762072496$o1$g1$t1762072500$j56$l0$h0",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1796632500.671333,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "rzp_device_id",
+          "value": "1.8e5fb6fc0cf1175f235812b5ac788945997a0a9a.1762072496948.18849524"
+        },
+        {
+          "name": "personal-academy-cookie-consent",
+          "value": "{\"essential\":true,\"analytics\":true,\"marketing\":true,\"timestamp\":\"2025-11-02T08:34:58.268Z\"}"
+        },
+        {
+          "name": "rzp_checkout_anon_id",
+          "value": "e868f0d8336648d5bc60f2cff2f6428b"
+        }
+      ]
+    },
+    {
+      "origin": "https://api.razorpay.com",
+      "localStorage": [
+        {
+          "name": "rzp_device_id",
+          "value": "1.8e5fb6fc0cf1175f235812b5ac788945997a0a9a.1762072497236.90019523"
+        }
+      ]
+    }
+  ]
+}

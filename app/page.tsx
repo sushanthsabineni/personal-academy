@@ -1,56 +1,34 @@
-'use client'
-
-// React
-import { useEffect, useState } from 'react'
-
-// Next.js
-import { useRouter } from 'next/navigation'
-import dynamic from 'next/dynamic'
+// Server Component
 import Image from 'next/image'
-
-// Supabase
-import { supabase } from '@/lib/supabase/client'
-
-// Components - lazy loaded
-const ContactForm = dynamic(() => import('@/components/ContactForm'), {
-  ssr: false,
-  loading: () => <div className="animate-pulse bg-slate-700/30 rounded-xl h-96"></div>
-})
+import Link from 'next/link'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import ContactTrigger from '@/components/ContactTrigger'
 
 // External libraries
 import { Zap, Target, Rocket, Mail } from '@/lib/icons'
 
-export default function LandingPage() {
-  const router = useRouter()
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [isContactFormOpen, setIsContactFormOpen] = useState(false)
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setIsLoggedIn(!!session?.user)
-    }
-    
-    checkAuth()
-  }, [])
+export default async function LandingPage() {
+  const supabase = await createServerSupabaseClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  const isLoggedIn = !!session?.user
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900">
       
       {/* HERO SECTION */}
-      <section className="py-12 md:py-20 px-6">
+      <section className="py-4 md:py-6 px-6">
         <div className="max-w-4xl mx-auto text-center">
           
           {/* Logo */}
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-2">
             <Image 
-              src="/logo.png?v=2" 
-              alt="Personal Academy" 
-              width={180}
-              height={180}
+              src="/logo.webp"
+              alt="Personal Academy"
+              width={612}
+              height={612}
               priority
-              className="w-36 h-36 object-contain"
-              unoptimized
+              className="w-[612px] h-auto object-contain"
+              style={{ height: 'auto' }}
             />
           </div>
 
@@ -59,31 +37,22 @@ export default function LandingPage() {
           </h1>
           
           <p className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 mb-8 leading-relaxed">
-            Personal Academy helps instructional designers build professional, engaging courses faster than ever before. Powered by AI, loved by educators.
+            Personal Academy built by L&D professionals to help L&D professionals build engaging courses faster than ever before. Powered by AI, loved by educators.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
             {isLoggedIn ? (
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="px-8 py-3 bg-brand-teal hover:bg-brand-cyan text-white font-semibold rounded-lg shadow-lg transition-all transform hover:scale-105"
-              >
+              <Link href="/dashboard" className="px-8 py-3 bg-brand-teal hover:bg-brand-cyan text-white font-semibold rounded-lg shadow-lg transition-all transform hover:scale-105">
                 Go to Dashboard
-              </button>
+              </Link>
             ) : (
               <>
-                <button
-                  onClick={() => router.push('/login')}
-                  className="px-8 py-3 bg-brand-teal hover:bg-brand-cyan text-white font-semibold rounded-lg shadow-lg transition-all transform hover:scale-105"
-                >
+                <Link href="/login" className="px-8 py-3 bg-brand-teal hover:bg-brand-cyan text-white font-semibold rounded-lg shadow-lg transition-all transform hover:scale-105">
                   Get Started
-                </button>
-                <button
-                  onClick={() => router.push('/help')}
-                  className="px-8 py-3 border-2 border-brand-teal text-brand-teal dark:text-brand-teal font-semibold rounded-lg hover:bg-brand-teal/10 transition-all"
-                >
+                </Link>
+                <Link href="/faq" className="px-8 py-3 border-2 border-brand-teal text-brand-teal dark:text-brand-teal font-semibold rounded-lg hover:bg-brand-teal/10 transition-all">
                   Learn More
-                </button>
+                </Link>
               </>
             )}
           </div>
@@ -148,7 +117,7 @@ export default function LandingPage() {
                 Ready to Launch
               </h3>
               <p className="text-gray-700 dark:text-gray-400">
-                Export to SCORM, xAPI, PDF, PowerPoint, and Word formats instantly
+                Export to PDF, PowerPoint, and Word formats instantly
               </p>
             </div>
           </div>
@@ -164,32 +133,17 @@ export default function LandingPage() {
           <p className="text-xl text-white/90 mb-8">
             Join educators worldwide who are creating better courses, faster.
           </p>
-          <button
-            onClick={() => router.push('/login')}
-            className="px-8 py-3 bg-white hover:bg-gray-100 text-brand-dark font-semibold rounded-lg shadow-lg transition-all transform hover:scale-105"
+          <Link
+            href="/login"
+            className="inline-block px-8 py-3 bg-white hover:bg-gray-100 text-brand-dark font-semibold rounded-lg shadow-lg transition-all transform hover:scale-105"
           >
             Get Started
-          </button>
+          </Link>
         </div>
       </section>
 
-      {/* Floating Contact Button */}
-      <button
-        onClick={() => setIsContactFormOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-brand-teal hover:bg-brand-cyan text-white rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-110 flex items-center justify-center z-40 group"
-        aria-label="Contact Support"
-      >
-        <Mail size={24} />
-        <span className="absolute right-full mr-3 px-3 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-          Contact Us
-        </span>
-      </button>
-
-      {/* Contact Form Modal */}
-      <ContactForm 
-        isOpen={isContactFormOpen} 
-        onClose={() => setIsContactFormOpen(false)} 
-      />
+      {/* Contact client island */}
+      <ContactTrigger />
     </div>
   )
 }

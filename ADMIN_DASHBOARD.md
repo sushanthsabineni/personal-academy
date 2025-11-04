@@ -84,7 +84,7 @@ adminLogout(): void
 ⚠️ **CRITICAL**: Change these before production deployment!
 
 ```typescript
-Email: admin@personalacademy.com
+Email: support@personalacademy.app
 Password: admin123
 Role: super-admin
 ```
@@ -389,7 +389,7 @@ updatePricingPlans(plans: PricingPlan[]): void
 | Setting | Default | Description |
 |---------|---------|-------------|
 | Platform Name | Personal Academy | Brand name |
-| Support Email | support@personalacademy.com | Contact email |
+| Support Email | support@personalacademy.app | Contact email |
 | Currency Symbol | ₹ | Display symbol |
 | Currency Code | INR | ISO code |
 | Exchange Rate | 83 | USD to INR conversion |
@@ -552,7 +552,7 @@ generateMockUsers(): UserProfile[]
 ```typescript
 // ❌ DO NOT USE IN PRODUCTION
 const ADMIN_CREDENTIALS = {
-  email: 'admin@personalacademy.com',
+  email: 'support@personalacademy.app',
   password: 'admin123',
   role: 'super-admin'
 }

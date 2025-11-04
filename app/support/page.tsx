@@ -2,7 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import ContactForm from '@/components/ContactForm'
+import dynamic from 'next/dynamic'
+
+// Lazy load ContactForm
+const ContactForm = dynamic(() => import('@/components/ContactForm'), {
+  ssr: false,
+  loading: () => <div className="animate-pulse bg-slate-700/30 rounded-xl h-96"></div>
+})
+
 import { 
   BookOpen, 
   Sparkles, 
@@ -347,7 +354,7 @@ export default function SupportPage() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="mailto:support@personalacademy.com"
+                href="mailto:support@personalacademy.app"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-brand-teal font-semibold rounded-lg shadow-md hover:shadow-lg transition-all hover:scale-105"
               >
                 <Mail className="w-5 h-5" />
@@ -366,8 +373,8 @@ export default function SupportPage() {
 
             <p className="text-white/75 text-sm mt-6">
               Email us at:{' '}
-              <a href="mailto:support@personalacademy.com" className="underline hover:text-white font-semibold">
-                support@personalacademy.com
+              <a href="mailto:support@personalacademy.app" className="underline hover:text-white font-semibold">
+                support@personalacademy.app
               </a>
             </p>
           </div>

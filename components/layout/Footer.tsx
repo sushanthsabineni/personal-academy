@@ -2,6 +2,7 @@
 
 // Next.js
 import Link from "next/link";
+import Image from "next/image";
 
 // Internal utilities
 import { COMPANY_INFO } from "@/lib/legalContent";
@@ -13,96 +14,77 @@ export default function Footer() {
     <footer className="bg-gray-900 text-gray-300 border-t border-gray-800">
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           
-          {/* Company Info */}
+          {/* Column 1: Logo and Description */}
           <div className="lg:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">PA</span>
-              </div>
-              <span className="text-white font-bold text-xl">{COMPANY_INFO.displayName}</span>
+            <div className="mb-4">
+              <Image 
+                src="/logo.webp"
+                alt="Personal Academy"
+                width={160}
+                height={160}
+                className="h-12 w-auto object-contain"
+                style={{ height: 'auto' }}
+              />
             </div>
-            <p className="text-sm text-gray-400 mb-4">
+            <p className="text-sm text-gray-400">
               AI-powered course generation platform helping educators create engaging learning content effortlessly.
             </p>
           </div>
 
-          {/* Products */}
+          {/* Column 2: AI Course Generator Links */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Products</h3>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-3 text-sm">
               <li>
-                <Link href="/create" className="hover:text-blue-400 transition-colors">
-                  AI Course Generator
-                </Link>
-              </li>
-              <li>
-                <Link href="/pricing" className="hover:text-blue-400 transition-colors">
-                  Pricing Plans
-                </Link>
-              </li>
-              <li>
-                <Link href="/dashboard" className="hover:text-blue-400 transition-colors">
+                <Link href="/dashboard" className="hover:text-brand-teal transition-colors">
                   Dashboard
-                </Link>
-              </li>
-              <li>
-                <Link href="/refer" className="hover:text-blue-400 transition-colors">
-                  Referral Program
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Column 3: FAQ Links */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Support</h3>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-3 text-sm">
               <li>
-                <Link href="/help" className="hover:text-blue-400 transition-colors">
-                  Help Center
-                </Link>
-              </li>
-              <li>
-                <Link href="/faq" className="hover:text-blue-400 transition-colors">
+                <Link href="/faq" className="hover:text-brand-teal transition-colors">
                   FAQ
                 </Link>
               </li>
               <li>
-                <Link href="/tutorials" className="hover:text-blue-400 transition-colors">
-                  Tutorials
+                <Link href="/pricing" className="hover:text-brand-teal transition-colors">
+                  Pricing Plan
+                </Link>
+              </li>
+              <li>
+                <Link href="/refer" className="hover:text-brand-teal transition-colors">
+                  Refer and Earn
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Trust Center */}
+          {/* Column 4: Privacy & Legal Links */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Trust Center</h3>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-3 text-sm">
               <li>
-                <Link href="/trust" className="hover:text-blue-400 transition-colors">
-                  Overview
-                </Link>
-              </li>
-              <li>
-                <Link href="/trust/privacy" className="hover:text-blue-400 transition-colors">
+                <Link href="/trust/privacy" className="hover:text-brand-teal transition-colors">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/trust/gdpr" className="hover:text-blue-400 transition-colors">
+                <Link href="/trust/gdpr" className="hover:text-brand-teal transition-colors">
                   GDPR
                 </Link>
               </li>
               <li>
-                <Link href="/terms-of-use" className="hover:text-blue-400 transition-colors">
+                <Link href="/terms-of-use" className="hover:text-brand-teal transition-colors">
                   Terms of Use
                 </Link>
               </li>
               <li>
-                <Link href="/terms-of-service" className="hover:text-blue-400 transition-colors">
+                <Link href="/terms-of-service" className="hover:text-brand-teal transition-colors">
                   Terms of Service
                 </Link>
               </li>
@@ -111,7 +93,7 @@ export default function Footer() {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-gray-800 mt-8 pt-8">
+        <div className="border-t border-gray-800 mt-10 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             
             {/* Copyright */}
@@ -120,15 +102,18 @@ export default function Footer() {
             </div>
 
             {/* Quick Links */}
-            <div className="flex items-center gap-4 text-sm">
-              <Link href="/terms-of-service" className="text-gray-400 hover:text-blue-400 transition-colors">
+            <div className="flex items-center gap-6 text-sm">
+              <Link href="/terms-of-service" className="text-gray-400 hover:text-brand-teal transition-colors">
                 Terms
               </Link>
-              <Link href="/trust/privacy" className="text-gray-400 hover:text-blue-400 transition-colors">
+              <Link href="/trust/privacy" className="text-gray-400 hover:text-brand-teal transition-colors">
                 Privacy
               </Link>
-              <Link href="/trust/privacy#cookies" className="text-gray-400 hover:text-blue-400 transition-colors">
-                Cookie Preferences
+              <Link href="/faq" className="text-gray-400 hover:text-brand-teal transition-colors">
+                FAQ
+              </Link>
+              <Link href="/support" className="text-gray-400 hover:text-brand-teal transition-colors">
+                Support
               </Link>
             </div>
           </div>

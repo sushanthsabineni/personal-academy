@@ -247,7 +247,7 @@ export const en = {
     creditExpiration: 'Credit Expiration',
     creditExpirationDesc: 'Credits expire 365 days after purchase and cannot be refunded.',
     paymentProcessing: 'Payment Processing',
-    paymentProcessingDesc: 'Secure payments via Razorpay (India) and Stripe (International).',
+    paymentProcessingDesc: 'Secure payments via Razorpay with support for credit/debit cards, UPI, net banking, and wallets.',
     agreement: 'By purchasing, you agree to our',
   },
 

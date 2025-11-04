@@ -33,11 +33,15 @@ export default function ExpensesPage() {
   }, [])
 
   useEffect(() => {
-    if (!isAdmin()) {
-      router.push('/admin/login')
-      return
+    const checkAuth = async () => {
+      const adminStatus = await isAdmin()
+      if (!adminStatus) {
+        router.push('/admin/login')
+        return
+      }
+      loadExpenses()
     }
-    loadExpenses()
+    checkAuth()
   }, [router, loadExpenses])
 
   const categories: ExpenseCategory[] = [

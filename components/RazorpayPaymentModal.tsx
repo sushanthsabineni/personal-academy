@@ -60,12 +60,7 @@ export default function RazorpayPaymentModal({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          amount: amountInPaise,
-          currency,
-          credits: tier.credits,
-          tierName: tier.name,
-        }),
+        body: JSON.stringify({ tierId: tier.id }),
       })
 
       const responseData = await orderResponse.json()
@@ -108,8 +103,8 @@ export default function RazorpayPaymentModal({
       // Razorpay checkout options
       const options: RazorpayOptions = {
         key: key,
-        amount: amountInPaise,
-        currency,
+        amount: responseData.amount,
+        currency: responseData.currency || currency,
         name: 'Personal Academy',
         description: `${tier.credits} Credits - ${tier.name} Plan`,
         image: '/logo.png?v=2',
@@ -305,9 +300,9 @@ export default function RazorpayPaymentModal({
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">Storyboards</span>
-                    <span className="font-medium text-gray-900 dark:text-white">~{tier.storyboards}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">~{tier.storyboards || 0}</span>
                   </div>
-                  {tier.savings > 0 && (
+                  {(tier.savings ?? 0) > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600 dark:text-gray-400">Savings</span>
                       <span className="font-medium text-green-600 dark:text-green-400">
@@ -327,17 +322,19 @@ export default function RazorpayPaymentModal({
               </div>
 
               {/* Features Included */}
-              <div className="mb-6">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">What&apos;s Included</h3>
-                <ul className="space-y-2">
-                  {tier.features.map((feature, index) => (
-                    <li key={index} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <CheckCircle className="text-brand-teal flex-shrink-0" size={16} />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {tier.features && tier.features.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">What&apos;s Included</h3>
+                  <ul className="space-y-2">
+                    {tier.features.map((feature, index) => (
+                      <li key={index} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <CheckCircle className="text-brand-teal flex-shrink-0" size={16} />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Security Badge */}
               <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg mb-6">

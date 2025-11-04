@@ -1,7 +1,7 @@
 # Contact Form Implementation - Complete ✅
 
 ## Summary
-Successfully implemented a complete contact form system that allows users to submit inquiries directly to **personalacademy1@gmail.com**.
+Successfully implemented a complete contact form system that allows users to submit inquiries directly to **support@personalacademy.app**.
 
 ## What Was Built
 
@@ -21,7 +21,7 @@ A beautiful, accessible modal contact form with:
 
 Server-side endpoint that:
 - ✅ **Validates** all form data (email format, required fields, message length)
-- ✅ **Sends emails** via Resend API (if configured) to personalacademy1@gmail.com
+- ✅ **Sends emails** via Resend API (if configured) to support@personalacademy.app
 - ✅ **Fallback mode**: Logs to console when no email service configured (for dev/testing)
 - ✅ **Beautiful HTML email template** with professional styling
 - ✅ **Plain text fallback** for email clients that don't support HTML
@@ -124,7 +124,7 @@ Reply directly to this email to respond to [User's Name].
 1. Sign up at resend.com
 2. Add API key to `.env.local`
 3. Submit test form
-4. Check personalacademy1@gmail.com inbox
+4. Check support@personalacademy.app inbox
 5. Verify email formatting and reply-to functionality
 
 ## Current Status
@@ -143,10 +143,10 @@ Reply directly to this email to respond to [User's Name].
 3. Add to `.env.local`:
    ```bash
    RESEND_API_KEY=re_xxxxxxxxxxxxx
-   RESEND_FROM_EMAIL=noreply@personalacademy.com
+   RESEND_FROM_EMAIL=support@personalacademy.app
    ```
 4. Test form submission
-5. Verify email arrives at personalacademy1@gmail.com
+5. Verify email arrives at support@personalacademy.app
 6. Deploy! 🚀
 
 ### Optional Enhancements:
@@ -171,7 +171,7 @@ Reply directly to this email to respond to [User's Name].
 
 ## Support
 
-All contact form inquiries will be sent to: **personalacademy1@gmail.com**
+All contact form inquiries will be sent to: **support@personalacademy.app**
 
 For technical issues with the form, see `CONTACT_FORM_SETUP.md` for troubleshooting.
 

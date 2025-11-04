@@ -243,12 +243,12 @@ Home → Trust Center → Privacy Policy ↔ GDPR ↔ Terms of Use ↔ Terms of 
 ## 📧 Contact Information
 
 ### Legal Inquiries
-- **Email:** personalacademy1@gmail.com
+- **Email:** support@personalacademy.app
 - **Response Time:** 30 days
 - **Use For:** Legal questions, compliance, DPA requests
 
 ### Support
-- **Email:** personalacademy1@gmail.com
+- **Email:** support@personalacademy.app
 - **Use For:** Billing, technical support, general questions
 
 ### Company Details
@@ -306,7 +306,7 @@ Home → Trust Center → Privacy Policy ↔ GDPR ↔ Terms of Use ↔ Terms of 
 
 ### Pre-Launch Tasks (User Action Required)
 1. **Review legal content** with legal counsel
-2. **Update email addresses** if different from personalacademy1@gmail.com
+2. **Update email addresses** if different from support@personalacademy.app
 3. **Configure analytics** (Google Analytics integration)
 4. **Test payment flow** with actual Razorpay/Stripe
 5. **Enable cookie tracking** in production

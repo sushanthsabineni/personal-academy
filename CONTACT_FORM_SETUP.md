@@ -1,7 +1,7 @@
 # Contact Form Setup Documentation
 
 ## Overview
-The contact form system allows users to submit inquiries that are sent to `personalacademy1@gmail.com`. The system includes:
+The contact form system allows users to submit inquiries that are sent to `support@personalacademy.app`. The system includes:
 - Reusable `ContactForm` component with modal UI
 - `/api/contact` API route for email handling
 - Integration in Support, Help, and Landing pages
@@ -114,7 +114,7 @@ For Gmail or custom SMTP servers.
    
    await transporter.sendMail({
      from: process.env.SMTP_USER,
-     to: 'personalacademy1@gmail.com',
+     to: 'support@personalacademy.app',
      replyTo: email,
      subject: emailContent.subject,
      html: emailContent.html,
@@ -153,7 +153,7 @@ If no email service is configured, the API still works:
 1. Set up Resend account and add API key
 2. Build and deploy: `npm run build && npm start`
 3. Submit test form
-4. Check `personalacademy1@gmail.com` inbox
+4. Check `support@personalacademy.app` inbox
 5. Verify email formatting and reply-to address
 
 ## Email Template Features
@@ -230,7 +230,7 @@ In Resend fetch call:
 ```typescript
 body: JSON.stringify({
   from: process.env.RESEND_FROM_EMAIL,
-  to: 'personalacademy1@gmail.com',
+  to: 'support@personalacademy.app',
   cc: ['manager@example.com'],
   bcc: ['archive@example.com'],
   // ... rest of email data
@@ -265,7 +265,7 @@ Modify the `emailContent.html` section in `app/api/contact/route.ts` to match yo
 1. **Set up Resend account** (5 minutes)
 2. **Add environment variables** to `.env.local`
 3. **Test form submission** locally
-4. **Verify email delivery** to personalacademy1@gmail.com
+4. **Verify email delivery** to support@personalacademy.app
 5. **Deploy to production**
 6. **Monitor usage** and add rate limiting if needed
 

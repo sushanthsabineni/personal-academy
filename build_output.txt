@@ -1,0 +1,35 @@
+﻿
+> personal-academy@0.1.0 build
+> next build
+
+   Γû▓ Next.js 16.0.0 (Turbopack)
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully in 20.3s
+   Running TypeScript ...
+node.exe : Failed to compile.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Failed to compile.:String) [], RemoteExcept 
+   ion
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./app/add-credits/page.tsx:78:17
+Type error: Argument of type 'Record<string, unknown>' is not assignable to parameter of 
+type 'never'.
+
+[0m [90m 76 |[39m       [36mconst[39m { error[33m:[39m updateError } [33m=[39m 
+[36mawait[39m (supabase
+ [90m 77 |[39m         [33m.[39m[36mfrom[39m([32m'profiles'[39m)
+[31m[1m>[22m[39m[90m 78 |[39m         [33m.[39mupdate({ 
+credits_balance[33m:[39m newBalance } [36mas[39m 
+[33mRecord[39m[33m<[39m[33mstring[39m[33m,[39m unknown[33m>[39m)
+ [90m    |[39m                 [31m[1m^[22m[39m
+ [90m 79 |[39m         [33m.[39meq([32m'id'[39m[33m,[39m 
+session[33m.[39muser[33m.[39mid) [36mas[39m any)[33m;[39m
+ [90m 80 |[39m
+ [90m 81 |[39m       [36mif[39m (updateError) [36mthrow[39m updateError[0m
+Next.js build worker exited with code: 1 and signal: null

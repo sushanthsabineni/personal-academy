@@ -1,48 +1,106 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
+import type { Database } from '@/lib/supabase/database.types'
 
 import { useState, useEffect } from 'react'
-import { getUserInfo } from '@/lib/auth'
-import { getCreditBalance, purchaseCredits } from '@/lib/creditManagement'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase/client'
 
 export default function AddCreditsPage() {
   const router = useRouter()
   const [credits, setCredits] = useState(3000)
   const [currentBalance, setCurrentBalance] = useState(0)
   const [message, setMessage] = useState('')
+  const [userEmail, setUserEmail] = useState('')
+  const [isAuthorized, setIsAuthorized] = useState(false)
 
   useEffect(() => {
-    const user = getUserInfo()
-    if (user) {
-      const balance = getCreditBalance(user.email)
-      setCurrentBalance(balance.availableCredits)
-    }
-  }, [])
+    const loadUserData = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
 
-  const handleAddCredits = () => {
-    const user = getUserInfo()
-    if (!user) {
-      setMessage('Please log in first')
+      if (!session?.user) {
+        router.push('/login')
+        return
+      }
+
+      setUserEmail(session.user.email || '')
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('credits_balance')
+        .eq('id', session.user.id)
+        .single();
+
+      const profile = data as { credits_balance: number } | null;
+      if (error || !profile) {
+        setMessage('You do not have permission to access this page.');
+        setTimeout(() => router.replace('/dashboard'), 2000);
+        return;
+      }
+
+      setIsAuthorized(true);
+      setCurrentBalance(profile.credits_balance ?? 0);
+    }
+
+    loadUserData()
+  }, [router])
+
+  const handleAddCredits = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    if (!session?.user) {
+      setMessage('Please log in first.')
       return
     }
 
-    const success = purchaseCredits(
-      credits,
-      'manual-add',
-      `MANUAL-${Date.now()}`
-    )
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('credits_balance, is_admin')
+        .eq('id', session.user.id)
+        .single();
+      const profile = data as { credits_balance: number; is_admin: boolean } | null;
 
-    if (success) {
-      const newBalance = getCreditBalance(user.email)
-      setCurrentBalance(newBalance.availableCredits)
-      setMessage(`✅ Successfully added ${credits} credits! New balance: ${newBalance.availableCredits}`)
-      
-      // Redirect to credits page after 2 seconds
+      if (error) throw error
+      if (!profile?.is_admin) {
+        setMessage('You do not have permission to add credits.')
+        return
+      }
+
+      const newBalance = (profile.credits_balance || 0) + credits
+
+      const { error: updateError } = await (supabase
+        .from('profiles')
+        .update({ credits_balance: newBalance } as never)
+        .eq('id', session.user.id) as any);
+
+      if (updateError) throw updateError
+
+      await supabase.from('credits_transactions').insert({
+        user_id: session.user.id,
+        amount: credits,
+        type: 'bonus',
+        description: 'Admin add credits',
+        balance_after: newBalance,
+        transaction_type: 'admin_add',
+        payment_method: 'manual',
+        payment_id: '',
+        status: 'completed',
+      } as any);
+
+      setCurrentBalance(newBalance)
+      setMessage(`Successfully added ${credits} credits. New balance: ${newBalance}.`)
+
       setTimeout(() => {
         router.push('/account/credits')
       }, 2000)
-    } else {
-      setMessage('❌ Failed to add credits')
+    } catch (error) {
+      console.error('add-credits: error adding credits', error)
+      setMessage('Failed to add credits. Please try again.')
     }
   }
 
@@ -52,10 +110,20 @@ export default function AddCreditsPage() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
           Add Credits Manually
         </h1>
-        
-        <div className="mb-4">
-          <p className="text-gray-600 dark:text-gray-400">
-            Current Balance: <span className="font-bold text-brand-teal">{currentBalance}</span> credits
+
+        <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+          <p>
+            User:{' '}
+            <span className="font-medium">
+              {userEmail || 'Loading…'}
+            </span>
+          </p>
+          <p>
+            Current Balance:{' '}
+            <span className="font-bold text-brand-teal">
+              {currentBalance}
+            </span>{' '}
+            credits
           </p>
         </div>
 
@@ -66,14 +134,17 @@ export default function AddCreditsPage() {
           <input
             type="number"
             value={credits}
+            min={0}
             onChange={(e) => setCredits(Number(e.target.value))}
             className="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-gray-900 dark:text-white"
+            disabled={!isAuthorized}
           />
         </div>
 
         <button
           onClick={handleAddCredits}
-          className="w-full bg-brand-teal hover:bg-brand-teal/90 text-white font-semibold py-3 rounded-lg transition-colors"
+          className="w-full bg-brand-teal hover:bg-brand-teal/90 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!isAuthorized}
         >
           Add Credits
         </button>

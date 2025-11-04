@@ -7,8 +7,63 @@ interface ContactFormData {
   message: string
 }
 
+type RateLimitRecord = {
+  hits: number
+  resetAt: number
+}
+
+const RATE_LIMIT_WINDOW_MS = 60_000
+const RATE_LIMIT_MAX_REQUESTS = 5
+
+const globalStore = globalThis as typeof globalThis & {
+  __contactRateLimit?: Map<string, RateLimitRecord>
+}
+
+const rateLimitStore =
+  globalStore.__contactRateLimit ?? (globalStore.__contactRateLimit = new Map())
+
+const getClientKey = (request: NextRequest): string => {
+  const xfwd = request.headers.get('x-forwarded-for') || ''
+  const xreal = request.headers.get('x-real-ip') || ''
+  return xfwd || xreal || 'unknown'
+}
+
+const isRateLimited = (key: string): { limited: boolean; retryAfter?: number } => {
+  const record = rateLimitStore.get(key)
+  const now = Date.now()
+
+  if (!record || record.resetAt <= now) {
+    rateLimitStore.set(key, { hits: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
+    return { limited: false }
+  }
+
+  if (record.hits >= RATE_LIMIT_MAX_REQUESTS) {
+    return {
+      limited: true,
+      retryAfter: Math.ceil((record.resetAt - now) / 1000),
+    }
+  }
+
+  record.hits += 1
+  rateLimitStore.set(key, record)
+  return { limited: false }
+}
+
 export async function POST(request: NextRequest) {
   try {
+    const clientKey = getClientKey(request)
+    const { limited, retryAfter } = isRateLimited(clientKey)
+
+    if (limited) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        {
+          status: 429,
+          headers: retryAfter ? { 'Retry-After': retryAfter.toString() } : undefined,
+        }
+      )
+    }
+
     const body: ContactFormData = await request.json()
     const { name, email, subject, message } = body
 
@@ -39,10 +94,10 @@ export async function POST(request: NextRequest) {
 
     // Create email content
     const emailContent = {
-      to: 'personalacademy1@gmail.com',
-      from: email,
-      replyTo: email,
-      subject: `Contact Form: ${subject}`,
+  to: 'support@personalacademy.app',
+  from: email,
+  replyTo: email,
+  subject: `Contact Form: ${subject}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -62,7 +117,7 @@ export async function POST(request: NextRequest) {
         <body>
           <div class="container">
             <div class="header">
-              <h1 style="margin: 0;">📧 New Contact Form Submission</h1>
+              <h1 style="margin: 0;">New Contact Form Submission</h1>
             </div>
             <div class="content">
               <div class="field">
@@ -118,8 +173,8 @@ Reply directly to this email to respond to ${name}.
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: process.env.RESEND_FROM_EMAIL || 'noreply@personalacademy.com',
-            to: 'personalacademy1@gmail.com',
+            from: process.env.RESEND_FROM_EMAIL || email,
+            to: 'support@personalacademy.app',
             reply_to: email,
             subject: emailContent.subject,
             html: emailContent.html,
@@ -142,13 +197,12 @@ Reply directly to this email to respond to ${name}.
       }
     }
 
-    // Fallback: Log to console (for development/testing)
-    console.log('=== Contact Form Submission ===')
-    console.log('From:', name, `(${email})`)
-    console.log('Subject:', subject)
-    console.log('Message:', message)
-    console.log('Time:', new Date().toISOString())
-    console.log('===============================')
+    // Fallback: Log minimal metadata for development/testing
+    console.info('contact: submission received (fallback mode)', {
+      email,
+      subject,
+      timestamp: new Date().toISOString(),
+    })
 
     // Return success even in log-only mode
     return NextResponse.json({ 
@@ -165,3 +219,4 @@ Reply directly to this email to respond to ${name}.
     )
   }
 }
+

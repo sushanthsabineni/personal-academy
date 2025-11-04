@@ -17,9 +17,13 @@ export default function PlatformSettingsPage() {
   const [showSuccess, setShowSuccess] = useState(false)
 
   useEffect(() => {
-    if (!isAdmin()) {
-      router.push('/admin/login')
+    const checkAuth = async () => {
+      const adminStatus = await isAdmin()
+      if (!adminStatus) {
+        router.push('/admin/login')
+      }
     }
+    checkAuth()
   }, [router])
 
   const handleChange = (field: keyof typeof settings, value: string | boolean) => {
@@ -151,7 +155,7 @@ export default function PlatformSettingsPage() {
                   value={settings.supportEmail}
                   onChange={(e) => handleChange('supportEmail', e.target.value)}
                   className="w-full bg-slate-700 text-white rounded-lg px-4 py-3 border border-slate-600 focus:outline-none focus:border-purple-500"
-                  placeholder="support@personalacademy.com"
+                  placeholder="support@personalacademy.app"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Users will contact this email for help and support

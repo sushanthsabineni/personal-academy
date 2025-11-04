@@ -188,7 +188,7 @@ export default function GlobalError({
                 If the problem continues, please clear your browser cache and cookies,
                 or{' '}
                 <a
-                  href="mailto:support@personalacademy.com"
+                  href="mailto:support@personalacademy.app"
                   style={{
                     color: '#a78bfa',
                     textDecoration: 'underline',

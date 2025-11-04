@@ -1,8 +1,16 @@
 // Credit Management System
 // Handles all credit-related operations
 
-import { getUserInfo } from './auth'
 import { getAICreditRates } from './adminConfig'
+
+// Helper to get current user info
+function getUserInfo(): { email: string; id: string } | null {
+  if (typeof window === 'undefined') return null
+  
+  // This is a synchronous fallback - actual auth should use supabase.auth.getSession()
+  // For now, return null and let functions handle it
+  return null
+}
 
 export interface CreditBalance {
   userId: string
@@ -70,10 +78,10 @@ export function getCreditBalance(userId?: string): CreditBalance {
 function initializeCreditBalance(userId: string): CreditBalance {
   const balance: CreditBalance = {
     userId,
-    totalCredits: 100, // Free user starting credits
-    availableCredits: 100,
+    totalCredits: 1000, // Starting credits for new users
+    availableCredits: 1000,
     reservedCredits: 0,
-    lifetimeEarned: 100,
+    lifetimeEarned: 1000,
     lifetimeSpent: 0,
     lifetimePurchased: 0,
     lastUpdated: new Date().toISOString(),
@@ -202,6 +210,13 @@ export function spendCredits(
     metadata,
   })
 
+  // Send push notification if credits are running low (below 100)
+  if (balance.availableCredits < 100 && balance.availableCredits >= 0) {
+    import('./pushNotifications').then(({ sendCreditsLowNotification }) => {
+      sendCreditsLowNotification(userInfo.id, balance.availableCredits).catch(console.error)
+    }).catch(console.error)
+  }
+
   return true
 }
 
@@ -231,6 +246,13 @@ export function earnCredits(
     description,
     metadata,
   })
+
+  // Send push notification for referral rewards
+  if (type === 'referral') {
+    import('./pushNotifications').then(({ sendReferralRewardNotification }) => {
+      sendReferralRewardNotification(userInfo.id, credits).catch(console.error)
+    }).catch(console.error)
+  }
 
   return true
 }

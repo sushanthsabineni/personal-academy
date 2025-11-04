@@ -27,7 +27,7 @@ export default function ComingSoonPage() {
 
           {/* Heading */}
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Coming Soon! 🚀
+            Coming Soon!
           </h1>
 
           {/* Description */}
@@ -88,7 +88,7 @@ export default function ComingSoonPage() {
           <div className="mt-8 pt-8 border-t border-gray-200 dark:border-slate-700">
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Want to be notified when this feature launches?{' '}
-              <a href="mailto:personalacademy1@gmail.com" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+              <a href="mailto:support@personalacademy.app" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
                 Contact us
               </a>
             </p>
@@ -97,7 +97,7 @@ export default function ComingSoonPage() {
 
         {/* Bottom Note */}
         <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
-          Thank you for your patience and support! 💙
+          Thank you for your patience and support! 🚀
         </p>
       </div>
     </div>

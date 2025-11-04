@@ -3,20 +3,44 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { isAdmin } from '@/lib/adminAuth'
-import { getPricingPlans, updatePricingPlans, formatINR, type PricingPlan } from '@/lib/adminConfig'
+type PricingPlan = { id: string; name: string; credits: number; price_in_inr?: number; price?: number; price_in_usd?: number; features: string[]; isPopular?: boolean; is_active?: boolean }
+const formatINR = (amount: number) => `₹${amount.toLocaleString('en-IN')}`
 import { CreditCard, Save, Plus, Trash2, Check } from '@/lib/icons'
 
 export default function PricingConfigPage() {
   const router = useRouter()
-  const [plans, setPlans] = useState<PricingPlan[]>(getPricingPlans())
+  const [plans, setPlans] = useState<PricingPlan[]>([])
   const [hasChanges, setHasChanges] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [editingFeature, setEditingFeature] = useState<{ planId: string; index: number } | null>(null)
 
   useEffect(() => {
-    if (!isAdmin()) {
-      router.push('/admin/login')
+    const init = async () => {
+      const adminStatus = await isAdmin()
+      if (!adminStatus) {
+        router.push('/admin/login')
+        return
+      }
+      try {
+        const res = await fetch('/api/admin/pricing', { cache: 'no-store' })
+        const data = await res.json()
+        const mapped: PricingPlan[] = (data.plans || []).map((p: any) => ({
+          id: String(p.id),
+          name: p.name,
+          credits: p.credits,
+          price_in_inr: p.price_in_inr,
+          price: p.price_in_inr, // keep compatibility with existing UI fields
+          price_in_usd: p.price_in_usd || Math.round((p.price_in_inr || 0) / 83),
+          features: p.features || [],
+          isPopular: p.is_popular,
+          is_active: p.is_active !== false,
+        }))
+        setPlans(mapped)
+      } catch (e) {
+        console.error('admin:pricing load failed', e)
+      }
     }
+    init()
   }, [router])
 
   const handlePlanChange = (planId: string, field: keyof PricingPlan, value: unknown) => {
@@ -64,16 +88,55 @@ export default function PricingConfigPage() {
     setHasChanges(true)
   }
 
-  const handleSave = () => {
-    updatePricingPlans(plans)
-    setHasChanges(false)
-    setShowSuccess(true)
-    setTimeout(() => setShowSuccess(false), 3000)
+  const handleSave = async () => {
+    try {
+      const payload = plans.map(p => ({
+        id: p.id,
+        name: p.name,
+        credits: p.credits,
+        price_in_inr: (p as any).price_in_inr ?? (p as any).price ?? 0,
+        price_in_usd: p.price_in_usd,
+        features: p.features,
+        is_popular: !!p.isPopular,
+        is_active: p.is_active !== false,
+      }))
+      const res = await fetch('/api/admin/pricing', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plans: payload })
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to save pricing plans')
+      }
+      setHasChanges(false)
+      setShowSuccess(true)
+      setTimeout(() => setShowSuccess(false), 3000)
+    } catch (e) {
+      console.error('admin:pricing save failed', e)
+    }
   }
 
-  const handleReset = () => {
-    setPlans(getPricingPlans())
-    setHasChanges(false)
+  const handleReset = async () => {
+    try {
+      const res = await fetch('/api/admin/pricing', { cache: 'no-store' })
+      const data = await res.json()
+      const mapped: PricingPlan[] = (data.plans || []).map((p: any) => ({
+        id: String(p.id),
+        name: p.name,
+        credits: p.credits,
+        price_in_inr: p.price_in_inr,
+        price: p.price_in_inr,
+        price_in_usd: p.price_in_usd || Math.round((p.price_in_inr || 0) / 83),
+        features: p.features || [],
+        isPopular: p.is_popular,
+        is_active: p.is_active !== false,
+      }))
+      setPlans(mapped)
+      setHasChanges(false)
+    } catch (e) {
+      console.error('admin:pricing reset failed', e)
+    }
   }
 
   return (
@@ -178,7 +241,7 @@ export default function PricingConfigPage() {
                     className="w-full bg-slate-700 text-white rounded-lg px-4 py-2 border border-slate-600 focus:outline-none focus:border-purple-500"
                     min="0"
                   />
-                  <p className="text-xs text-gray-500 mt-1">{formatINR(plan.price)}</p>
+                  <p className="text-xs text-gray-500 mt-1">{formatINR(plan.price ?? 0)}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">
@@ -266,8 +329,8 @@ export default function PricingConfigPage() {
                 <div className="bg-slate-700/50 rounded-lg p-4">
                   <h3 className="text-lg font-bold text-white">{plan.name}</h3>
                   <p className="text-3xl font-bold text-purple-400 my-2">
-                    {formatINR(plan.price)}
-                    {plan.price > 0 && <span className="text-sm text-gray-400">/month</span>}
+                    {formatINR(plan.price ?? 0)}
+                    {(plan.price ?? 0) > 0 && <span className="text-sm text-gray-400">/month</span>}
                   </p>
                   <p className="text-sm text-gray-400 mb-3">{plan.credits} AI Credits</p>
                   <div className="space-y-1">

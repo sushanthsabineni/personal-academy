@@ -11,8 +11,8 @@ export const COMPANY_INFO = {
     full: "Hyderabad, Telangana, India"
   },
   contact: {
-    legal: "personalacademy1@gmail.com",
-    support: "personalacademy1@gmail.com",
+    legal: "support@personalacademy.app",
+    support: "support@personalacademy.app",
     dpo: null // No Data Protection Officer currently
   },
   website: "https://personalacademy.app",
@@ -147,13 +147,6 @@ export const DATA_USAGE_PURPOSES = [
 
 export const THIRD_PARTY_SERVICES = [
   {
-    name: "OpenAI",
-    purpose: "AI content generation",
-    dataShared: "User prompts, course requirements",
-    privacy: "https://openai.com/policies/privacy-policy",
-    location: "United States"
-  },
-  {
     name: "Supabase",
     purpose: "Data storage and database management",
     dataShared: "All user data and course content",
@@ -162,17 +155,10 @@ export const THIRD_PARTY_SERVICES = [
   },
   {
     name: "Razorpay",
-    purpose: "Payment processing (India)",
+    purpose: "Payment processing",
     dataShared: "Transaction details, billing information",
     privacy: "https://razorpay.com/privacy/",
     location: "India"
-  },
-  {
-    name: "Stripe",
-    purpose: "Payment processing (International)",
-    dataShared: "Transaction details, billing information",
-    privacy: "https://stripe.com/privacy",
-    location: "United States / Europe"
   }
 ];
 
@@ -188,7 +174,7 @@ export const USER_RIGHTS = {
     },
     {
       right: "Right to Erasure ('Right to be Forgotten')",
-      description: "Request deletion of your personal data under certain conditions"
+      description: "Request deletion of your personal data. Account deletion includes a 30-day grace period before permanent removal."
     },
     {
       right: "Right to Restriction of Processing",
@@ -222,11 +208,15 @@ export const USER_RIGHTS = {
     },
     {
       right: "Right to Erasure",
-      description: "Request deletion when data is no longer necessary"
+      description: "Request deletion when data is no longer necessary. Includes 30-day grace period and scheduled deletion process."
     },
     {
       right: "Right to Grievance Redressal",
       description: "Lodge complaints with the Data Protection Board of India"
+    },
+    {
+      right: "Right to Nominate",
+      description: "Nominate another person to exercise rights in case of death or incapacity"
     }
   ],
   ccpa: [
@@ -236,7 +226,7 @@ export const USER_RIGHTS = {
     },
     {
       right: "Right to Delete",
-      description: "Request deletion of personal information"
+      description: "Request deletion of personal information with 30-day grace period"
     },
     {
       right: "Right to Opt-Out",
@@ -250,20 +240,30 @@ export const USER_RIGHTS = {
 };
 
 export const DATA_RETENTION = {
-  activeAccounts: "Duration of account + 6 months after closure",
-  deletedAccounts: "30 days (then permanently deleted)",
-  courseContent: "Duration of account + 90 days backup retention",
-  paymentRecords: "7 years (Indian tax compliance requirement)",
+  activeAccounts: "While active + 6 months after last activity",
+  deletedAccounts: "30-day grace period, then permanently deleted",
+  courseContent: "While active + 6 months after account deletion",
+  paymentRecords: "7 years (Indian Income Tax Act compliance)",
+  creditsTransactions: "While active + 6 months after account deletion",
+  referralData: "While active + 6 months after account deletion",
+  fileUploads: "While active + 6 months after account deletion",
   usageLogs: "12 months for security and analytics",
   marketingData: "Until opt-out or account deletion",
-  backups: "90 days rolling backup, then permanently deleted"
+  backups: "90 days rolling backup, then permanently deleted",
+  inactiveAccounts: "Flagged after 6 months of inactivity",
+  deletionProcess: {
+    requestDeletion: "User requests account deletion via settings",
+    gracePeriod: "30 days to cancel deletion request",
+    permanentDeletion: "All user data removed after grace period expires",
+    exceptions: "Payment records retained for 7 years (tax compliance)",
+    emailConfirmation: "Confirmation email sent with cancellation link"
+  }
 };
 
 export const SECURITY_MEASURES = [
   "End-to-end encryption for data in transit (TLS/SSL)",
   "Encryption at rest for sensitive data",
   "Regular security audits and vulnerability assessments",
-  "Multi-factor authentication (MFA) support",
   "Role-based access control (RBAC)",
   "Automated backup systems with 90-day retention",
   "DDoS protection and rate limiting",
@@ -430,7 +430,7 @@ export const FAQ_TRUST_CENTER = [
   },
   {
     question: "Where is my data stored?",
-    answer: "Your data is stored in Supabase's India Region servers, ensuring compliance with Indian data localization requirements. Payment data is handled by Razorpay (India) and Stripe (international) and is not stored on our servers."
+    answer: "Your data is stored in Supabase's India Region servers, ensuring compliance with Indian data localization requirements. Payment data is handled by Razorpay and is not stored on our servers."
   },
   {
     question: "Do you use my course content to train AI models?",
@@ -438,7 +438,7 @@ export const FAQ_TRUST_CENTER = [
   },
   {
     question: "Can I delete my account and data?",
-    answer: "Yes. You can request account deletion at any time by contacting personalacademy1@gmail.com. We will permanently delete your data within 30 days, except where we're legally required to retain certain records (e.g., payment records for tax purposes)."
+    answer: "Yes. You can request account deletion from your account settings. When you request deletion, you'll have a 30-day grace period during which you can cancel the request and restore your account. After 30 days, your account and all associated data (courses, credits, referrals, file uploads) will be permanently deleted. Payment transaction records are retained for 7 years for tax compliance as required by Indian law. You'll receive email confirmations at each step of the deletion process."
   },
   {
     question: "What happens to my credits if I cancel?",
@@ -450,7 +450,7 @@ export const FAQ_TRUST_CENTER = [
   },
   {
     question: "How long do you keep my data?",
-    answer: "Active account data is retained while your account is active plus 6 months. After account deletion, most data is removed within 30 days. Payment records are retained for 7 years per Indian tax laws. See our Privacy Policy for complete retention details."
+    answer: "Active account data is retained while your account is active plus 6 months after last activity. When you request account deletion, you have a 30-day grace period to cancel. After the grace period, most data is permanently deleted within 30 days. Payment records are retained for 7 years per Indian Income Tax Act requirements. You can view your account status and deletion schedule in your account settings."
   },
   {
     question: "Do you sell my personal information?",
@@ -462,7 +462,7 @@ export const FAQ_TRUST_CENTER = [
   },
   {
     question: "How can I exercise my data rights?",
-    answer: "Contact us at personalacademy1@gmail.com with your request. We support access, correction, deletion, portability, and opt-out rights. We will respond within 30 days for most requests."
+    answer: "Contact us at support@personalacademy.app with your request. We support access, correction, deletion, portability, and opt-out rights. We will respond within 30 days for most requests."
   }
 ];
 

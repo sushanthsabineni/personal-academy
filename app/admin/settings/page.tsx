@@ -11,12 +11,32 @@ export default function AdminSettingsPage() {
   const [config] = useState(getAdminConfig())
 
   useEffect(() => {
-    if (!isAdmin()) {
-      router.push('/admin/login')
+    const checkAuth = async () => {
+      const adminStatus = await isAdmin()
+      if (!adminStatus) {
+        router.push('/admin/login')
+      }
     }
+    checkAuth()
   }, [router])
 
   const settingsCards = [
+    {
+      title: 'OpenRouter Configuration',
+      description: 'Configure your OpenRouter API key and select AI models for course generation',
+      icon: Zap,
+      href: '/admin/config/openrouter',
+      color: 'from-orange-600 to-red-600',
+      iconColor: 'text-orange-400',
+    },
+    {
+      title: 'AI Prompts & Configuration',
+      description: 'Customize AI model settings, temperature, and prompts to fine-tune course generation quality',
+      icon: Settings,
+      href: '/admin/config/ai-prompts',
+      color: 'from-indigo-600 to-purple-600',
+      iconColor: 'text-indigo-400',
+    },
     {
       title: 'Expense Management',
       description: 'Track and manage all platform expenses including AI credits, tools, marketing, and development costs',
@@ -78,7 +98,7 @@ export default function AdminSettingsPage() {
             <h1 className="text-3xl font-bold text-white">Admin Settings</h1>
           </div>
           <p className="text-gray-400">
-            Manage all platform configurations, expenses, pricing, and AI credit rates
+            Manage all platform configurations, expenses, pricing, AI prompts, and AI credit rates
           </p>
         </div>
 
@@ -140,7 +160,14 @@ export default function AdminSettingsPage() {
         {/* Quick Actions */}
         <div className="mt-8 bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-xl p-6 border border-purple-700/50">
           <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <button
+              onClick={() => router.push('/admin/config/ai-prompts')}
+              className="bg-slate-800 hover:bg-slate-700 rounded-lg p-4 text-left transition"
+            >
+              <p className="text-sm text-gray-400 mb-1">Customize</p>
+              <p className="text-white font-semibold">AI Prompts</p>
+            </button>
             <button
               onClick={() => router.push('/admin/expenses')}
               className="bg-slate-800 hover:bg-slate-700 rounded-lg p-4 text-left transition"

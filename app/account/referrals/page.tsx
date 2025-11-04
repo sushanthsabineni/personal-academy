@@ -1,20 +1,68 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Copy, Check, Share2, Trophy, Users, Zap, Gift, Award, Send, UserPlus, Coins } from '@/lib/icons'
 import { trackReferralShare } from '@/lib/analytics'
 
+interface ReferralStats {
+  referralCode: string
+  referralLink: string
+  stats: {
+    totalReferrals: number
+    completedReferrals: number
+    pendingReferrals: number
+    creditsEarned: number
+  }
+  referrals: Array<{
+    id: string
+    status: string
+    referrer_bonus_credits: number
+    referee_first_purchase_at: string | null
+    created_at: string
+    referee: {
+      full_name: string | null
+      email: string
+    }
+  }>
+}
+
 export default function ReferralsPage() {
   const [copied, setCopied] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState<ReferralStats | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  // Mock data
-  const referralCode = 'JOHN2024'
-  const referralLink = `https://personalacademy.app/signup?ref=${referralCode}`
+  useEffect(() => {
+    fetchReferralData()
+  }, [])
+
+  const fetchReferralData = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/referral/stats')
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch referral data')
+      }
+
+      const result = await response.json()
+      setData(result)
+      setError(null)
+    } catch (err) {
+      console.error('Error fetching referral data:', err)
+      setError('Failed to load referral data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const referralCode = data?.referralCode || 'LOADING...'
+  const referralLink = data?.referralLink || ''
 
   const stats = {
-    totalReferrals: 12,
-    creditsEarned: 6000,
-    pending: 3,
+    totalReferrals: data?.stats.totalReferrals || 0,
+    creditsEarned: data?.stats.creditsEarned || 0,
+    pending: data?.stats.pendingReferrals || 0,
   }
 
   const milestones = [
@@ -24,11 +72,26 @@ export default function ReferralsPage() {
     { count: 25, reward: 'Affiliate program (15% recurring)', icon: Award },
   ]
 
-  const referrals = [
-    { name: 'Sarah Khan', credits: 1000, date: '2 days ago', status: 'Completed' },
-    { name: 'Arjun Patel', credits: 500, date: '1 week ago', status: 'Completed' },
-    { name: 'Maya Singh', credits: 1000, date: '1 week ago', status: 'Pending' },
-  ]
+  // Transform API data to display format
+  const referrals = data?.referrals.map(r => ({
+    name: r.referee.full_name || r.referee.email.split('@')[0],
+    credits: r.referrer_bonus_credits || 0,
+    date: formatDate(r.referee_first_purchase_at || r.created_at),
+    status: r.status === 'completed' ? 'Completed' : 'Pending',
+  })) || []
+
+  function formatDate(dateString: string): string {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+    if (diffDays === 0) return 'Today'
+    if (diffDays === 1) return 'Yesterday'
+    if (diffDays < 7) return `${diffDays} days ago`
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? 's' : ''} ago`
+    return date.toLocaleDateString()
+  }
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(referralLink)
@@ -237,50 +300,76 @@ export default function ReferralsPage() {
           <h2 className="text-2xl font-bold mb-6 text-light-text dark:text-dark-text">
             Recent Referrals
           </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-light-border dark:border-dark-border">
-                  <th className="text-left py-3 px-4 font-semibold text-light-text dark:text-dark-text">
-                    Friend
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-light-text dark:text-dark-text">
-                    Your Bonus
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-light-text dark:text-dark-text">
-                    Date
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-light-text dark:text-dark-text">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {referrals.map((referral, idx) => (
-                  <tr key={idx} className="border-b border-light-border dark:border-dark-border hover:bg-light-bg dark:hover:bg-dark-bg">
-                    <td className="py-4 px-4 text-light-text dark:text-dark-text">
-                      {referral.name}
-                    </td>
-                    <td className="py-4 px-4 font-semibold text-brand-teal">
-                      +{referral.credits} credits
-                    </td>
-                    <td className="py-4 px-4 text-light-muted dark:text-dark-muted">
-                      {referral.date}
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        referral.status === 'Completed'
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                          : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
-                      }`}>
-                        {referral.status}
-                      </span>
-                    </td>
+          
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-teal mx-auto"></div>
+              <p className="mt-4 text-light-muted dark:text-dark-muted">Loading referrals...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-8 text-red-500">
+              <p>{error}</p>
+              <button 
+                onClick={fetchReferralData}
+                className="mt-4 px-4 py-2 bg-brand-teal text-white rounded-lg hover:bg-brand-cyan transition-all"
+              >
+                Retry
+              </button>
+            </div>
+          ) : referrals.length === 0 ? (
+            <div className="text-center py-12">
+              <Users size={48} className="mx-auto text-light-muted dark:text-dark-muted mb-4" />
+              <p className="text-light-muted dark:text-dark-muted mb-2">No referrals yet</p>
+              <p className="text-sm text-light-muted dark:text-dark-muted">
+                Share your referral link to start earning!
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-light-border dark:border-dark-border">
+                    <th className="text-left py-3 px-4 font-semibold text-light-text dark:text-dark-text">
+                      Friend
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-light-text dark:text-dark-text">
+                      Your Bonus
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-light-text dark:text-dark-text">
+                      Date
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-light-text dark:text-dark-text">
+                      Status
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {referrals.map((referral, idx) => (
+                    <tr key={idx} className="border-b border-light-border dark:border-dark-border hover:bg-light-bg dark:hover:bg-dark-bg">
+                      <td className="py-4 px-4 text-light-text dark:text-dark-text">
+                        {referral.name}
+                      </td>
+                      <td className="py-4 px-4 font-semibold text-brand-teal">
+                        {referral.credits > 0 ? `+${referral.credits} credits` : 'Pending'}
+                      </td>
+                      <td className="py-4 px-4 text-light-muted dark:text-dark-muted">
+                        {referral.date}
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          referral.status === 'Completed'
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                            : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
+                        }`}>
+                          {referral.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

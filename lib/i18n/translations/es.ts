@@ -249,7 +249,7 @@ export const es: TranslationKeys = {
     creditExpiration: 'Expiración de Créditos',
     creditExpirationDesc: 'Los créditos expiran 365 días después de la compra y no pueden reembolsarse.',
     paymentProcessing: 'Procesamiento de Pagos',
-    paymentProcessingDesc: 'Pagos seguros vía Razorpay (India) y Stripe (Internacional).',
+    paymentProcessingDesc: 'Pagos seguros vía Razorpay con soporte para tarjetas de crédito/débito, UPI, banca en línea y billeteras.',
     agreement: 'Al comprar, aceptas nuestros',
   },
 
