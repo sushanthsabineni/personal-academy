@@ -13,9 +13,10 @@ const DEFAULT_AI_PROMPT_CONFIG: AIPromptConfig = {
   openrouterApiKey: undefined,
   openrouterModel: 'openai/gpt-4o',
   openrouterFallbackModels: [
+    'openai/gpt-4-turbo',
     'anthropic/claude-3-opus',
-    'google/gemini-pro',
-    'meta-llama/llama-2-70b',
+    'anthropic/claude-3-sonnet',
+    'google/gemini-1.5-pro',
   ],
 
   // Direct API configuration (legacy)
@@ -56,11 +57,22 @@ export async function getAIPromptConfigWithDb(): Promise<AIPromptConfig> {
     const dbSettings = await getAdminSettingsFromDb()
     
     if (dbSettings && dbSettings.openrouter_api_key) {
+      // Parse fallback models from database
+      let fallbackModels = DEFAULT_AI_PROMPT_CONFIG.openrouterFallbackModels
+      if (dbSettings.openrouter_fallback_models) {
+        try {
+          fallbackModels = JSON.parse(dbSettings.openrouter_fallback_models)
+        } catch (e) {
+          console.warn('Failed to parse fallback models from database, using defaults:', e)
+        }
+      }
+      
       // Merge database settings with defaults
       return {
         ...DEFAULT_AI_PROMPT_CONFIG,
         openrouterApiKey: dbSettings.openrouter_api_key,
         openrouterModel: dbSettings.openrouter_model || DEFAULT_AI_PROMPT_CONFIG.openrouterModel,
+        openrouterFallbackModels: fallbackModels,
         temperature: dbSettings.temperature || DEFAULT_AI_PROMPT_CONFIG.temperature,
         maxTokens: dbSettings.max_tokens || DEFAULT_AI_PROMPT_CONFIG.maxTokens,
       };

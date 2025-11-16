@@ -217,16 +217,79 @@ function sleep(ms: number): Promise<void> {
  */
 export function getFallbackModels(primaryModel: string): string[] {
   const fallbackMap: Record<string, string[]> = {
-    'gpt-4-turbo': ['gpt-4', 'gpt-3.5-turbo', 'claude-3-sonnet'],
-    'gpt-4': ['gpt-3.5-turbo', 'claude-3-sonnet', 'mistral-large'],
-    'gpt-3.5-turbo': ['claude-3-haiku', 'mistral-large'],
-    'claude-3-opus': ['claude-3-sonnet', 'gpt-4-turbo', 'mistral-large'],
-    'claude-3-sonnet': ['claude-3-haiku', 'gpt-4', 'mistral-large'],
-    'claude-3-haiku': ['mistral-large', 'gpt-3.5-turbo'],
-    'mistral-large': ['gpt-4', 'claude-3-sonnet', 'gpt-3.5-turbo'],
+    // OpenAI models
+    'openai/gpt-4o': [
+      'openai/gpt-4-turbo',
+      'anthropic/claude-3-opus',
+      'anthropic/claude-3-sonnet',
+      'google/gemini-1.5-pro',
+    ],
+    'openai/gpt-4-turbo': [
+      'openai/gpt-3.5-turbo',
+      'anthropic/claude-3-opus',
+      'anthropic/claude-3-sonnet',
+      'google/gemini-1.5-pro',
+    ],
+    'openai/gpt-3.5-turbo': [
+      'anthropic/claude-3-sonnet',
+      'anthropic/claude-3-haiku',
+      'google/gemini-pro',
+    ],
+
+    // Anthropic models
+    'anthropic/claude-3-opus': [
+      'anthropic/claude-3-sonnet',
+      'openai/gpt-4-turbo',
+      'google/gemini-1.5-pro',
+      'openai/gpt-3.5-turbo',
+    ],
+    'anthropic/claude-3-sonnet': [
+      'anthropic/claude-3-haiku',
+      'openai/gpt-4-turbo',
+      'google/gemini-1.5-pro',
+      'openai/gpt-3.5-turbo',
+    ],
+    'anthropic/claude-3-haiku': [
+      'openai/gpt-3.5-turbo',
+      'google/gemini-pro',
+      'anthropic/claude-3-sonnet',
+    ],
+
+    // Google models
+    'google/gemini-1.5-pro': [
+      'google/gemini-pro',
+      'anthropic/claude-3-sonnet',
+      'openai/gpt-4-turbo',
+      'openai/gpt-3.5-turbo',
+    ],
+    'google/gemini-pro': [
+      'google/gemini-1.5-pro',
+      'anthropic/claude-3-sonnet',
+      'openai/gpt-4-turbo',
+      'openai/gpt-3.5-turbo',
+    ],
+
+    // Meta models
+    'meta-llama/llama-2-70b': [
+      'anthropic/claude-3-sonnet',
+      'openai/gpt-4-turbo',
+      'google/gemini-1.5-pro',
+      'openai/gpt-3.5-turbo',
+    ],
+    'meta-llama/llama-2-13b': [
+      'anthropic/claude-3-haiku',
+      'openai/gpt-3.5-turbo',
+      'google/gemini-pro',
+      'anthropic/claude-3-sonnet',
+    ],
   }
 
-  return fallbackMap[primaryModel] || ['gpt-3.5-turbo', 'claude-3-haiku']
+  // Safe default fallbacks - all verified to work with OpenRouter
+  return fallbackMap[primaryModel] || [
+    'anthropic/claude-3-sonnet',
+    'openai/gpt-3.5-turbo',
+    'google/gemini-pro',
+  ]
 }
 
 /**

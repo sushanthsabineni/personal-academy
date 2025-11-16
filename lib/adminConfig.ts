@@ -116,9 +116,10 @@ const DEFAULT_CONFIG: AdminConfig = {
     openrouterApiKey: undefined,
     openrouterModel: 'openai/gpt-4o',
     openrouterFallbackModels: [
+      'openai/gpt-4-turbo',
       'anthropic/claude-3-opus',
-      'google/gemini-pro',
-      'meta-llama/llama-2-70b',
+      'anthropic/claude-3-sonnet',
+      'google/gemini-1.5-pro',
     ],
 
     // Direct API configuration (legacy)

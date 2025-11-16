@@ -174,6 +174,7 @@ export default function OpenRouterConfigPage() {
       await saveAdminSettingsToDb({
         openrouter_api_key: config.openrouterApiKey,
         openrouter_model: config.openrouterModel,
+        openrouter_fallback_models: JSON.stringify(config.openrouterFallbackModels || []),
         temperature: config.temperature,
         max_tokens: config.maxTokens,
       })

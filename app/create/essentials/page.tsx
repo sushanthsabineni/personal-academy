@@ -43,10 +43,12 @@ export default function CourseStep1() {
   const [showTooltip, setShowTooltip] = useState<string | null>(null)
   const [courseId, setCourseId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const [userCredits, setUserCredits] = useState<number>(0)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [showUnsavedModal, setShowUnsavedModal] = useState(false)
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
+  const [expandedMethodology, setExpandedMethodology] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     courseTitle: '',
     industry: '',
@@ -101,6 +103,29 @@ export default function CourseStep1() {
       clearTimeout(changeTimeout)
     }
   }, [formData, courseId, userId, isInitialized])
+
+  // Fetch user credits on initialization
+  useEffect(() => {
+    if (!userId) return
+    
+    const fetchUserCredits = async () => {
+      try {
+        const { data: profile } = await (supabase
+          .from('profiles') as any)
+          .select('credits_balance')
+          .eq('id', userId)
+          .single()
+        
+        if (profile && typeof profile.credits_balance === 'number') {
+          setUserCredits(profile.credits_balance)
+        }
+      } catch (error) {
+        console.error('Failed to fetch user credits:', error)
+      }
+    }
+
+    fetchUserCredits()
+  }, [userId])
 
   // E-learning methodologies with rich data
   const methodologies = [
@@ -195,6 +220,65 @@ export default function CourseStep1() {
       tooltip: ['AI will select an appropriate model based on your inputs.'],
     },
   ]
+
+  // Initialize user and course data
+  useEffect(() => {
+    async function initializeData() {
+      const user = await checkAuth()
+      if (!user) {
+        router.push('/dashboard')
+        return
+      }
+      setUserId(user.id)
+      
+      // Find latest draft or in-progress course for user
+      const { data: courses } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('status', ['draft', 'in_progress'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+      
+      if (!courses || courses.length === 0) {
+        // Create new course if none exists
+        const { data: newCourse } = await (supabase
+          .from('courses') as any)
+          .insert({
+            user_id: user.id,
+            title: 'New Course',
+            status: 'draft',
+            current_step: 1,
+          })
+          .select()
+          .single()
+        
+        if (newCourse) {
+          setCourseId((newCourse as any).id)
+        }
+        return
+      }
+      
+      const course = courses[0]
+      setCourseId((course as any).id)
+      
+      // Load existing form data from course
+      if ((course as any).title) setFormData(prev => ({ ...prev, courseTitle: (course as any).title }))
+      if ((course as any).industry) setFormData(prev => ({ ...prev, industry: (course as any).industry }))
+      if ((course as any).target_audience) setFormData(prev => ({ ...prev, targetAudience: (course as any).target_audience }))
+      if ((course as any).knowledge_level) setFormData(prev => ({ ...prev, knowledgeLevel: (course as any).knowledge_level }))
+      if ((course as any).learning_outcomes) setFormData(prev => ({ ...prev, learningOutcomes: (course as any).learning_outcomes }))
+      if ((course as any).duration) setFormData(prev => ({ ...prev, duration: (course as any).duration }))
+      if ((course as any).instructional_model) setFormData(prev => ({ ...prev, methodology: (course as any).instructional_model }))
+      if ((course as any).target_location) setFormData(prev => ({ ...prev, targetLocation: (course as any).target_location }))
+      if ((course as any).description) setFormData(prev => ({ ...prev, additionalInfo: (course as any).description }))
+      if ((course as any).file_notes) setFormData(prev => ({ ...prev, fileNotes: (course as any).file_notes }))
+      
+      setIsInitialized(true)
+    }
+    
+    initializeData()
+  }, [])
 
   // Calculate form completion percentage
   const getCompletionPercentage = () => {
@@ -384,20 +468,52 @@ export default function CourseStep1() {
         className="flex-1 pb-12 transition-[padding-left] duration-300 relative z-10"
         style={{ paddingLeft: 'var(--create-sidebar-width, 5rem)' }}
       >
-        <div className="w-full px-6 py-2 border-b border-light-border dark:border-dark-border">
-          <div className="max-w-full mx-auto flex items-center justify-between gap-4">
-            <div className="flex-1">
-              <h1 className="text-2xl font-display font-bold text-light-text dark:text-dark-text mb-1">
+        {/* Premium Header with Progress */}
+        <div className="w-full px-6 py-6 border-b border-light-border dark:border-dark-border bg-gradient-to-r from-brand-teal/5 via-purple-500/5 to-blue-500/5 dark:from-brand-teal/10 dark:via-purple-500/10 dark:to-blue-500/10">
+          <div className="max-w-full mx-auto">
+            {/* Breadcrumb & Step Indicator */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                <span>Course Creation</span>
+                <span className="text-gray-400">/</span>
+                <span className="font-semibold text-brand-teal">Step 1: Essential Details</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-xs font-bold text-brand-teal">1</span>
+                <span className="text-xs text-gray-600 dark:text-gray-400">of 5</span>
+              </div>
+            </div>
+
+            {/* Title & Description */}
+            <div className="mb-5">
+              <h1 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-r from-brand-teal via-brand-cyan to-blue-500 bg-clip-text text-transparent mb-2">
                 Essential Course Details
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400 max-w-2xl">
+              <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 max-w-2xl">
                 Share your vision and watch AI transform it into an engaging learning experience
               </p>
-              {/* Auto-save indicator */}
-              <div className="flex items-center gap-1.5 mt-2">
-                <div className={`w-1.5 h-1.5 rounded-full ${hasUnsavedChanges ? 'bg-amber-500 animate-pulse' : 'bg-green-500'}`}></div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {hasUnsavedChanges ? 'Saving...' : 'All changes saved'}
+            </div>
+
+            {/* Progress Bar with Percentage */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Progress</span>
+                  <span className="text-xs font-bold text-brand-teal">{getCompletionPercentage()}%</span>
+                </div>
+                <div className="h-2.5 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-brand-teal via-brand-cyan to-blue-500 transition-all duration-700 ease-out rounded-full shadow-lg shadow-brand-teal/50"
+                    style={{ width: `${getCompletionPercentage()}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Auto-save Status Indicator */}
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+                <div className={`w-2 h-2 rounded-full transition-all ${hasUnsavedChanges ? 'bg-amber-500 animate-pulse' : 'bg-green-500'}`}></div>
+                <p className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                  {hasUnsavedChanges ? 'Saving...' : 'Saved'}
                 </p>
               </div>
             </div>
@@ -405,27 +521,123 @@ export default function CourseStep1() {
         </div>
 
         <div className="max-w-7xl mx-auto px-6 pt-8">
-          {/* Responsive Single Column Layout after removing right column */}
-          <div className="flex justify-center">
-            <div className="w-full max-w-3xl space-y-6">
-              {/* Essential Information Card */}
-              <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 dark:border-slate-700 p-6 transition-all hover:shadow-2xl">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-teal to-brand-cyan flex items-center justify-center">
-                    <Rocket size={20} className="text-white" />
+          {/* Collapsible Form Summary Panel */}
+          <div className="mb-6">
+            <details className="group/summary">
+              <summary className="flex items-center gap-3 p-4 bg-gradient-to-r from-brand-teal/10 via-purple-500/10 to-blue-500/10 dark:from-brand-teal/20 dark:via-purple-500/20 dark:to-blue-500/20 rounded-xl border border-brand-teal/20 dark:border-brand-teal/30 cursor-pointer hover:border-brand-teal/40 transition-all select-none">
+                <span className="text-lg group-open/summary:rotate-90 transition-transform text-brand-teal">▶</span>
+                <div className="flex-1">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white">Form Summary</h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                    {getCompletionPercentage()}% complete • {Object.values(formData).filter(v => v && (typeof v === 'string' ? v.trim() : Array.isArray(v) ? v.length > 0 : v)).length} of 13 fields filled
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-xs font-semibold text-brand-teal">
+                  <span>View Details</span>
+                </div>
+              </summary>
+              
+              <div className="mt-4 p-4 bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-700 space-y-3">
+                {/* Course Title */}
+                <div className="flex items-start gap-3">
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${formData.courseTitle.trim().length >= 5 ? 'bg-green-500/20 text-green-600' : 'bg-gray-200 dark:bg-slate-700 text-gray-500'}`}>
+                    {formData.courseTitle.trim().length >= 5 && '✓'}
                   </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Essential Information</h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">The foundation of your course</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white">Course Title</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{formData.courseTitle || 'Not provided'}</p>
                   </div>
                 </div>
 
-                <div className="space-y-5">
+                {/* Industry */}
+                <div className="flex items-start gap-3">
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${formData.industry.trim() ? 'bg-green-500/20 text-green-600' : 'bg-gray-200 dark:bg-slate-700 text-gray-500'}`}>
+                    {formData.industry.trim() && '✓'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white">Industry</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{formData.industry || 'Not provided'}</p>
+                  </div>
+                </div>
+
+                {/* Target Audience */}
+                <div className="flex items-start gap-3">
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${formData.targetAudience.trim() ? 'bg-green-500/20 text-green-600' : 'bg-gray-200 dark:bg-slate-700 text-gray-500'}`}>
+                    {formData.targetAudience.trim() && '✓'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white">Target Audience</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{formData.targetAudience || 'Not provided'}</p>
+                  </div>
+                </div>
+
+                {/* Knowledge Level */}
+                <div className="flex items-start gap-3">
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${formData.knowledgeLevel ? 'bg-brand-teal/20 text-brand-teal' : 'bg-gray-200 dark:bg-slate-700 text-gray-500'}`}>
+                    {formData.knowledgeLevel && '✓'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white">Knowledge Level</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">{formData.knowledgeLevel || 'Not selected'}</p>
+                  </div>
+                </div>
+
+                {/* Learning Outcomes */}
+                <div className="flex items-start gap-3">
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${formData.learningOutcomes.length >= 20 ? 'bg-green-500/20 text-green-600' : 'bg-gray-200 dark:bg-slate-700 text-gray-500'}`}>
+                    {formData.learningOutcomes.length >= 20 && '✓'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white">Learning Outcomes</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{formData.learningOutcomes || 'Not provided'}</p>
+                  </div>
+                </div>
+
+                {/* Methodology */}
+                <div className="flex items-start gap-3">
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${formData.methodology ? 'bg-purple-500/20 text-purple-600' : 'bg-gray-200 dark:bg-slate-700 text-gray-500'}`}>
+                    {formData.methodology && '✓'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white">Instructional Design Model</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">{formData.methodology ? formData.methodology.replace(/_/g, ' ').toUpperCase() : 'Not selected'}</p>
+                  </div>
+                </div>
+              </div>
+            </details>
+          </div>
+
+          {/* Responsive Single Column Layout after removing right column */}
+          <div className="flex justify-center">
+            <div className="w-full max-w-3xl space-y-6">
+              {/* Essential Information Card - Premium Styling */}
+              <div className="relative group">
+                {/* Animated gradient border effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-brand-teal/20 via-purple-500/20 to-brand-cyan/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                
+                <div className="relative bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-slate-800/95 dark:to-slate-900/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-slate-700/50 p-8 transition-all hover:shadow-2xl hover:-translate-y-0.5">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-br from-brand-teal to-brand-cyan rounded-xl blur opacity-50 group-hover:opacity-75 transition"></div>
+                      <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-brand-teal to-brand-cyan flex items-center justify-center shadow-lg">
+                        <Rocket size={24} className="text-white" />
+                      </div>
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-display font-bold text-gray-900 dark:text-white">Essential Information</h2>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-medium">The foundation of your course</p>
+                    </div>
+                  </div>
+
+                <div className="space-y-6">
                   {/* Course Title */}
                   <div className="relative">
-                    <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                    <label className="flex items-center gap-2 text-sm font-bold mb-3 text-gray-900 dark:text-white uppercase tracking-wide">
                       <BookOpen size={16} className="text-brand-teal" />
-                      Course Title <span className="text-red-500">*</span>
+                      <span>Course Title</span>
+                      <span className="inline-flex items-center gap-1 ml-auto px-2 py-0.5 bg-brand-teal/10 text-brand-teal rounded-full text-xs font-semibold">
+                        Required
+                      </span>
                       {formData.courseTitle.length >= 5 && (
                         <CheckCircle2 size={16} className="text-green-500 ml-auto" />
                       )}
@@ -465,14 +677,31 @@ export default function CourseStep1() {
                         {formData.courseTitle.length}/100
                       </span>
                     </div>
+                    
+                    {/* Contextual Smart Tip */}
+                    {focusedField === 'courseTitle' && formData.courseTitle.length > 0 && (
+                      <div className="mt-2 p-2.5 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-800 flex gap-2">
+                        <Lightbulb size={14} className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-blue-700 dark:text-blue-300">
+                          {formData.courseTitle.length < 10 
+                            ? 'Keep adding! More specific titles help AI generate better content.' 
+                            : formData.courseTitle.length < 20 
+                            ? 'Great! This title is descriptive. AI will tailor content accordingly.' 
+                            : 'Perfect! This detailed title will guide AI to create highly relevant content.'}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Industry & Target Audience (2 columns) */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="relative">
-                      <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                      <label className="flex items-center gap-2 text-sm font-bold mb-3 text-gray-900 dark:text-white uppercase tracking-wide">
                         <TrendingUp size={16} className="text-brand-teal" />
-                        Industry <span className="text-red-500">*</span>
+                        <span>Industry</span>
+                        <span className="inline-flex items-center gap-1 ml-auto px-2 py-0.5 bg-brand-teal/10 text-brand-teal rounded-full text-xs font-semibold">
+                          Required
+                        </span>
                         {formData.industry.length > 0 && (
                           <CheckCircle2 size={16} className="text-green-500 ml-auto" />
                         )}
@@ -506,9 +735,12 @@ export default function CourseStep1() {
                     </div>
 
                     <div className="relative">
-                      <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                      <label className="flex items-center gap-2 text-sm font-bold mb-3 text-gray-900 dark:text-white uppercase tracking-wide">
                         <Users size={16} className="text-brand-teal" />
-                        Target Audience <span className="text-red-500">*</span>
+                        <span>Target Audience</span>
+                        <span className="inline-flex items-center gap-1 ml-auto px-2 py-0.5 bg-brand-teal/10 text-brand-teal rounded-full text-xs font-semibold">
+                          Required
+                        </span>
                         {formData.targetAudience.length > 0 && (
                           <CheckCircle2 size={16} className="text-green-500 ml-auto" />
                         )}
@@ -542,39 +774,59 @@ export default function CourseStep1() {
                     </div>
                   </div>
 
-                  {/* Knowledge Level - Premium Pills */}
+                  {/* Knowledge Level - Interactive with Descriptions */}
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-semibold mb-3 text-gray-900 dark:text-white">
+                    <label className="flex items-center gap-2 text-sm font-bold mb-4 text-gray-900 dark:text-white uppercase tracking-wide">
                       <Award size={16} className="text-brand-teal" />
-                      Knowledge Level <span className="text-red-500">*</span>
+                      <span>Knowledge Level</span>
+                      <span className="inline-flex items-center gap-1 ml-auto px-2 py-0.5 bg-brand-teal/10 text-brand-teal rounded-full text-xs font-semibold">
+                        Required
+                      </span>
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {['Beginner', 'Intermediate', 'Advanced', 'Mixed Level'].map((level) => (
+                      {[
+                        { label: 'Beginner', desc: 'No prior experience needed' },
+                        { label: 'Intermediate', desc: 'Some foundational knowledge' },
+                        { label: 'Advanced', desc: 'Significant expertise required' },
+                        { label: 'Mixed Level', desc: 'Accommodates all levels' }
+                      ].map((level) => (
                         <button
-                          key={level}
-                          onClick={() => setFormData({ ...formData, knowledgeLevel: level })}
-                          className={`relative h-14 rounded-xl font-medium text-sm transition-all overflow-hidden group ${
-                            formData.knowledgeLevel === level
-                              ? 'bg-gradient-to-br from-brand-teal to-brand-cyan text-white shadow-lg shadow-brand-teal/30 scale-105'
-                              : 'bg-white dark:bg-slate-900 border-2 border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:border-brand-teal hover:scale-105'
+                          key={level.label}
+                          onClick={() => setFormData({ ...formData, knowledgeLevel: level.label })}
+                          className={`relative h-auto rounded-xl font-medium text-sm transition-all overflow-hidden group ${
+                            formData.knowledgeLevel === level.label
+                              ? 'bg-gradient-to-br from-brand-teal to-brand-cyan text-white shadow-lg shadow-brand-teal/30'
+                              : 'bg-white dark:bg-slate-900 border-2 border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:border-brand-teal hover:bg-brand-teal/5'
                           }`}
                         >
-                          {formData.knowledgeLevel === level && (
+                          {formData.knowledgeLevel === level.label && (
                             <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
                           )}
-                          <span className="relative z-10">{level}</span>
+                          <div className="relative z-10 p-3">
+                            <div className="font-semibold">{level.label}</div>
+                            <div className={`text-xs mt-1 ${
+                              formData.knowledgeLevel === level.label
+                                ? 'text-white/90'
+                                : 'text-gray-500 dark:text-gray-400'
+                            }`}>
+                              {level.desc}
+                            </div>
+                          </div>
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  {/* Duration */}
+                  {/* Duration - Enhanced with Calculator */}
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-semibold mb-3 text-gray-900 dark:text-white">
+                    <label className="flex items-center gap-2 text-sm font-bold mb-4 text-gray-900 dark:text-white uppercase tracking-wide">
                       <Clock size={16} className="text-brand-teal" />
-                      Expected Duration <span className="text-red-500">*</span>
+                      <span>Expected Duration</span>
+                      <span className="inline-flex items-center gap-1 ml-auto px-2 py-0.5 bg-brand-teal/10 text-brand-teal rounded-full text-xs font-semibold">
+                        Required
+                      </span>
                     </label>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-3 mb-3">
                       {/* Duration Input */}
                       <div className="col-span-1">
                         <input
@@ -601,13 +853,27 @@ export default function CourseStep1() {
                         </select>
                       </div>
                     </div>
+                    {/* Duration Calculator Display */}
+                    {formData.duration > 0 && (
+                      <div className="p-3 rounded-lg bg-gradient-to-r from-brand-teal/10 to-brand-cyan/10 border border-brand-teal/20">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          ⏱️ Estimated total content: <span className="font-semibold text-brand-teal">
+                            {formData.duration} {formData.durationUnit === 'minutes' ? 'minute' : formData.durationUnit === 'hours' ? 'hour' : formData.durationUnit === 'days' ? 'day' : formData.durationUnit === 'weeks' ? 'week' : 'month'}
+                            {formData.duration !== 1 ? 's' : ''}
+                          </span>
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Approx Number of Modules (Dropdown, mandatory, AI integration) */}
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-semibold mb-3 text-gray-900 dark:text-white">
+                    <label className="flex items-center gap-2 text-sm font-bold mb-4 text-gray-900 dark:text-white uppercase tracking-wide">
                       <BookOpen size={16} className="text-brand-teal" />
-                      Approx Number of Modules <span className="text-red-500">*</span>
+                      <span>Approx Number of Modules</span>
+                      <span className="inline-flex items-center gap-1 ml-auto px-2 py-0.5 bg-brand-teal/10 text-brand-teal rounded-full text-xs font-semibold">
+                        Required
+                      </span>
                     </label>
                     <select
                       className={`w-full h-14 px-4 rounded-xl border-2 ${!formData.approxModules ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'} bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:border-brand-teal focus:ring-4 focus:ring-brand-teal/10 focus:outline-none text-sm`}
@@ -624,9 +890,12 @@ export default function CourseStep1() {
 
                   {/* Approx Number of Lessons per Module (Dropdown, mandatory, AI integration) */}
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-semibold mb-3 text-gray-900 dark:text-white">
+                    <label className="flex items-center gap-2 text-sm font-bold mb-4 text-gray-900 dark:text-white uppercase tracking-wide">
                       <Lightbulb size={16} className="text-brand-teal" />
-                      Approx Number of Lessons per Module <span className="text-red-500">*</span>
+                      <span>Approx Number of Lessons per Module</span>
+                      <span className="inline-flex items-center gap-1 ml-auto px-2 py-0.5 bg-brand-teal/10 text-brand-teal rounded-full text-xs font-semibold">
+                        Required
+                      </span>
                     </label>
                     <select
                       className={`w-full h-14 px-4 rounded-xl border-2 ${!formData.approxLessonsPerModule ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'} bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:border-brand-teal focus:ring-4 focus:ring-brand-teal/10 focus:outline-none text-sm`}
@@ -642,91 +911,140 @@ export default function CourseStep1() {
                   </div>
 
                 </div>
+                </div>
               </div>
 
-              {/* Learning Methodology Card - Redesigned as Card Grid */}
-              <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 dark:border-slate-700 p-6 transition-all hover:shadow-2xl">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-teal to-brand-cyan flex items-center justify-center">
-                    <Brain size={20} className="text-white" />
+              {/* Learning Methodology Card - Premium Redesign */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-brand-teal/20 to-blue-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                
+                <div className="relative bg-gradient-to-br from-white/95 to-blue-50/95 dark:from-slate-800/95 dark:to-slate-900/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-slate-700/50 p-8 transition-all hover:shadow-2xl hover:-translate-y-0.5">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl blur opacity-50 group-hover:opacity-75 transition"></div>
+                      <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-lg">
+                        <Brain size={24} className="text-white" />
+                      </div>
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-display font-bold text-gray-900 dark:text-white">Instructional Design Models</h2>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-medium">Choose the best approach for your course</p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Instructional Design Models</h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Choose your instructional approach</p>
-                  </div>
-                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                   {methodologies.map((method) => {
                     const Icon = method.icon;
                     const isSelected = formData.methodology === method.value;
-                    const [showDetails, setShowDetails] = [false, false]; // Placeholder for expand/collapse if needed
+                    const isExpanded = expandedMethodology === method.value;
+                    
                     return (
                       <div
                         key={method.value}
-                        className={`relative flex flex-col h-full rounded-2xl border-2 transition-all shadow-md bg-white dark:bg-slate-900 p-5 group ${
+                        className={`relative flex flex-col h-full rounded-2xl border-2 transition-all shadow-md bg-white dark:bg-slate-900 p-5 group overflow-hidden ${
                           isSelected
                             ? 'border-brand-teal ring-2 ring-brand-teal/30 scale-[1.03] shadow-lg'
-                            : 'border-gray-200 dark:border-slate-700 hover:border-brand-teal hover:shadow-lg'
+                            : 'border-gray-200 dark:border-slate-700 hover:border-purple-400 hover:shadow-lg'
                         }`}
                         style={{ minHeight: 260 }}
                       >
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${isSelected ? 'bg-brand-teal' : 'bg-gray-100 dark:bg-slate-800'}`}> 
+                        {/* Comparison highlight effect on hover */}
+                        <div className={`absolute inset-0 bg-gradient-to-br ${method.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none`}></div>
+                        
+                        <div className="relative flex items-start gap-3 mb-2">
+                          <div className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
+                            isSelected 
+                              ? 'bg-gradient-to-br from-brand-teal to-brand-cyan shadow-lg shadow-brand-teal/50' 
+                              : 'bg-gray-100 dark:bg-slate-800 group-hover:bg-gray-200 dark:group-hover:bg-slate-700'
+                          }`}> 
                             <Icon size={22} className={isSelected ? 'text-white' : 'text-brand-teal'} />
                           </div>
-                          <h3 className={`text-base font-bold ${isSelected ? 'text-brand-teal' : 'text-gray-900 dark:text-white'}`}>{method.label}</h3>
+                          <div className="flex-1">
+                            <h3 className={`text-sm font-bold ${isSelected ? 'text-brand-teal' : 'text-gray-900 dark:text-white'}`}>{method.label}</h3>
+                            {isSelected && <div className="text-xs text-brand-teal font-semibold mt-0.5">Selected</div>}
+                          </div>
                           {isSelected && (
-                            <CheckCircle2 size={20} className="text-brand-teal ml-auto" />
+                            <CheckCircle2 size={18} className="text-brand-teal flex-shrink-0 mt-0.5" />
                           )}
                         </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-300 mb-2 flex-1">{method.description}</p>
-                        {Array.isArray(method.tooltip) && (
-                          <details className="mb-3">
-                            <summary className="cursor-pointer text-xs text-brand-teal font-semibold select-none">Key Features</summary>
-                            <ul className="mt-2 list-disc ml-5 text-xs text-gray-500 dark:text-gray-400">
-                              {method.tooltip.map((t: string, idx: number) => (
-                                <li key={idx}>{t}</li>
-                              ))}
-                            </ul>
-                          </details>
+                        <p className="text-xs text-gray-600 dark:text-gray-300 mb-3 flex-1 leading-relaxed">{method.description}</p>
+                        
+                        {/* Custom Key Features with local state */}
+                        {Array.isArray(method.tooltip) && method.tooltip.length > 0 && (
+                          <div className="mb-3 border-t border-gray-200 dark:border-slate-700 pt-3">
+                            <button
+                              type="button"
+                              onClick={() => setExpandedMethodology(isExpanded ? null : method.value)}
+                              className="cursor-pointer text-xs text-brand-teal font-semibold select-none transition-all flex items-center gap-2 w-full mb-2 px-2 py-1.5 rounded-lg hover:bg-brand-teal/5 pointer-events-auto"
+                            >
+                              <span className={`text-xs transition-transform duration-200 inline-block flex-shrink-0 ${isExpanded ? 'rotate-90' : 'rotate-0'}`}>
+                                ▶
+                              </span>
+                              <span className="flex-1 text-left">
+                                Key Features
+                              </span>
+                            </button>
+                            
+                            {isExpanded && method.tooltip && method.tooltip.length > 0 && (
+                              <ul className="mt-2 space-y-2 pl-4">
+                                {method.tooltip.map((t: string, idx: number) => (
+                                  <li key={idx} className="text-xs text-gray-600 dark:text-gray-300 flex gap-2">
+                                    <span className="text-brand-teal flex-shrink-0">•</span>
+                                    <span>{t}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
                         )}
+                        
                         <button
                           type="button"
                           onClick={() => setFormData({ ...formData, methodology: method.value })}
-                          className={`mt-auto w-full py-2 px-3 rounded-lg font-semibold text-sm transition-all ${
+                          className={`mt-auto w-full text-xs text-brand-teal font-semibold text-center py-2 px-2 rounded-lg transition-all pointer-events-auto ${
                             isSelected
-                              ? 'bg-brand-teal text-white shadow-md'
-                              : 'bg-gray-100 dark:bg-slate-800 text-brand-teal hover:bg-brand-teal hover:text-white border border-brand-teal/30'
+                              ? 'bg-brand-teal/10 border border-brand-teal/20 text-brand-teal'
+                              : 'bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-brand-teal hover:bg-brand-teal hover:text-white hover:border-brand-teal'
                           }`}
                         >
-                          {isSelected ? 'Selected' : 'Select'}
+                          {isSelected ? '✓ Selected Model' : 'Select This Model'}
                         </button>
                       </div>
                     );
                   })}
                 </div>
               </div>
+              </div>
 
               {/* AI Model Recommender Card - Removed live preview and quality score for a cleaner layout */}
 
-              {/* Learning Outcomes Card */}
-              <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 dark:border-slate-700 p-6 transition-all hover:shadow-2xl">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-teal to-brand-cyan flex items-center justify-center">
-                    <Target size={20} className="text-white" />
+              {/* Learning Outcomes Card - Premium Styling */}
+              <div className="relative group">
+                {/* Animated gradient border effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-indigo-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                
+                <div className="relative bg-gradient-to-br from-white/95 to-cyan-50/95 dark:from-slate-800/95 dark:to-slate-900/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-slate-700/50 p-8 transition-all hover:shadow-2xl hover:-translate-y-0.5">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl blur opacity-50 group-hover:opacity-75 transition"></div>
+                      <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shadow-lg">
+                        <Target size={24} className="text-white" />
+                      </div>
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-display font-bold text-gray-900 dark:text-white">Learning Outcomes</h2>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-medium">Define what learners will achieve</p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Learning Outcomes</h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Define what learners will achieve</p>
-                  </div>
-                </div>
 
                 <div className="relative">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide">
                       <Target size={16} className="text-brand-teal" />
-                      Learning Outcomes <span className="text-red-500">*</span>
+                      <span>Learning Outcomes</span>
+                      <span className="inline-flex items-center gap-1 ml-auto px-2 py-0.5 bg-brand-teal/10 text-brand-teal rounded-full text-xs font-semibold">
+                        Required
+                      </span>
                       {formData.learningOutcomes.length >= 20 && (
                         <CheckCircle2 size={16} className="text-green-500" />
                       )}
@@ -753,9 +1071,13 @@ export default function CourseStep1() {
                       approxModules={formData.approxModules}
                       approxLessonsPerModule={formData.approxLessonsPerModule}
                       existingOutcomes={formData.learningOutcomes}
+                      userCredits={userCredits}
                       onEnhanced={(text) => {
                         setFormData(prev => ({ ...prev, learningOutcomes: text }))
                         setHasUnsavedChanges(true)
+                      }}
+                      onCreditsUpdate={(newBalance) => {
+                        setUserCredits(newBalance)
                       }}
                     />
                   </div>
@@ -781,28 +1103,102 @@ export default function CourseStep1() {
                       {formData.learningOutcomes.length}/1000
                     </span>
                   </div>
+                  
+                  {/* Expandable Outcomes Tips Section */}
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700">
+                    <details className="group/outcomes">
+                      <summary className="cursor-pointer flex items-center gap-2 text-sm font-semibold text-brand-teal hover:text-purple-500 transition-colors select-none py-2">
+                        <span className="text-lg group-open/outcomes:rotate-90 transition-transform">▶</span>
+                        <Lightbulb size={16} />
+                        <span>AI-Suggested Outcome Examples</span>
+                      </summary>
+                      <div className="mt-3 space-y-3 pl-6">
+                        {formData.courseTitle && (
+                          <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                            <p className="text-xs font-semibold text-blue-900 dark:text-blue-300 mb-1">For &quot;{formData.courseTitle}&quot;:</p>
+                            <ul className="space-y-1 text-xs text-blue-800 dark:text-blue-200">
+                              <li className="flex gap-2">
+                                <span>•</span>
+                                <span>Learners will be able to understand core concepts and terminology</span>
+                              </li>
+                              <li className="flex gap-2">
+                                <span>•</span>
+                                <span>Learners will apply knowledge through hands-on exercises and scenarios</span>
+                              </li>
+                              <li className="flex gap-2">
+                                <span>•</span>
+                                <span>Learners will evaluate real-world situations and make informed decisions</span>
+                              </li>
+                            </ul>
+                          </div>
+                        )}
+                        {formData.knowledgeLevel && formData.knowledgeLevel !== 'let-ai-decide' && (
+                          <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
+                            <p className="text-xs font-semibold text-purple-900 dark:text-purple-300 mb-1">For {formData.knowledgeLevel} learners:</p>
+                            <ul className="space-y-1 text-xs text-purple-800 dark:text-purple-200">
+                              {formData.knowledgeLevel === 'Beginner' && (
+                                <>
+                                  <li className="flex gap-2"><span>•</span><span>Build foundational understanding of essential concepts</span></li>
+                                  <li className="flex gap-2"><span>•</span><span>Develop confidence through guided practice</span></li>
+                                </>
+                              )}
+                              {formData.knowledgeLevel === 'Intermediate' && (
+                                <>
+                                  <li className="flex gap-2"><span>•</span><span>Deepen existing knowledge and fill knowledge gaps</span></li>
+                                  <li className="flex gap-2"><span>•</span><span>Master advanced techniques and best practices</span></li>
+                                </>
+                              )}
+                              {formData.knowledgeLevel === 'Advanced' && (
+                                <>
+                                  <li className="flex gap-2"><span>•</span><span>Master advanced techniques and cutting-edge practices</span></li>
+                                  <li className="flex gap-2"><span>•</span><span>Solve complex problems and lead in the field</span></li>
+                                </>
+                              )}
+                              {formData.knowledgeLevel === 'Mixed Level' && (
+                                <>
+                                  <li className="flex gap-2"><span>•</span><span>Accommodate diverse learner backgrounds and paces</span></li>
+                                  <li className="flex gap-2"><span>•</span><span>Provide both foundational and advanced content tracks</span></li>
+                                </>
+                              )}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </details>
+                  </div>
                   {/* Error display moved into AIOutcomesPanel */}
                 </div>
               </div>
+              </div>
 
-              {/* Optional Details Card */}
-              <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 dark:border-slate-700 p-6 transition-all hover:shadow-2xl">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-teal to-brand-cyan flex items-center justify-center">
-                    <Globe size={20} className="text-white" />
+              {/* Additional Details Card - Premium Styling */}
+              <div className="relative group">
+                {/* Animated gradient border effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-brand-teal/20 to-brand-cyan/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                
+                <div className="relative bg-gradient-to-br from-white/95 to-emerald-50/95 dark:from-slate-800/95 dark:to-slate-900/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-slate-700/50 p-8 transition-all hover:shadow-2xl hover:-translate-y-0.5">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-brand-teal rounded-xl blur opacity-50 group-hover:opacity-75 transition"></div>
+                      <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-brand-teal flex items-center justify-center shadow-lg">
+                        <Globe size={24} className="text-white" />
+                      </div>
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-display font-bold text-gray-900 dark:text-white">Additional Details</h2>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-medium">Optional but helpful</p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Additional Details</h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Optional but helpful</p>
-                  </div>
-                </div>
 
-                <div className="space-y-5">
+                <div className="space-y-6">
                   {/* Target Location */}
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                    <label className="flex items-center gap-2 text-sm font-bold mb-3 text-gray-900 dark:text-white uppercase tracking-wide">
                       <Globe size={16} className="text-brand-teal" />
-                      Target Location <span className="text-gray-400 text-xs">(Optional)</span>
+                      <span>Target Location</span>
+                      <span className="inline-flex items-center gap-1 ml-auto px-2 py-0.5 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-400 rounded-full text-xs font-semibold">
+                        Optional
+                      </span>
                     </label>
                     <input
                       type="text"
@@ -815,20 +1211,29 @@ export default function CourseStep1() {
 
                   {/* Upload Documents */}
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                    <label className="flex items-center gap-2 text-sm font-bold mb-3 text-gray-900 dark:text-white uppercase tracking-wide">
                       <Upload size={16} className="text-brand-teal" />
-                      Supporting Documents <span className="text-gray-400 text-xs">(Optional)</span>
+                      <span>Supporting Documents</span>
+                      <span className="inline-flex items-center gap-1 ml-auto px-2 py-0.5 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-400 rounded-full text-xs font-semibold">
+                        Optional
+                      </span>
                     </label>
-                    <label className="flex flex-col items-center justify-center w-full h-40 px-4 transition-all border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-xl cursor-pointer hover:bg-brand-teal/5 hover:border-brand-teal group">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <div className="w-16 h-16 mb-3 rounded-full bg-gradient-to-br from-brand-teal to-brand-cyan flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <label className="flex flex-col items-center justify-center w-full h-48 px-4 transition-all border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-xl cursor-pointer hover:bg-brand-teal/5 hover:border-brand-teal hover:shadow-lg group relative overflow-hidden">
+                      {/* Animated background gradient on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-brand-teal/5 to-brand-cyan/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      
+                      <div className="relative flex flex-col items-center justify-center pt-5 pb-6 w-full">
+                        <div className="w-16 h-16 mb-3 rounded-full bg-gradient-to-br from-brand-teal to-brand-cyan flex items-center justify-center group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-brand-teal/30 transition-all">
                           <Upload size={24} className="text-white" />
                         </div>
-                        <span className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-                          Drop files here or click to upload
+                        <span className="text-sm font-bold text-gray-900 dark:text-white mb-1 text-center">
+                          Drop your files here
                         </span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          PDF, PPT, Word • Max 50MB
+                        <span className="text-xs text-gray-600 dark:text-gray-400 text-center mb-2">
+                          or click to browse
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 px-2 py-1 bg-white/50 dark:bg-slate-800/50 rounded-lg">
+                          PDF, PPT, Word • Up to 50MB
                         </span>
                       </div>
                       <input
@@ -840,21 +1245,37 @@ export default function CourseStep1() {
                       />
                     </label>
 
+                    {/* Cloud Sync Indicator */}
+                    {formData.uploadedFiles.length > 0 && (
+                      <div className="mt-3 p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                          <span className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">Cloud synced</span>
+                        </div>
+                        <span className="text-xs text-emerald-600 dark:text-emerald-400">{formData.uploadedFiles.length} file{formData.uploadedFiles.length !== 1 ? 's' : ''}</span>
+                      </div>
+                    )}
+
                     {/* Uploaded Files List */}
                     {formData.uploadedFiles.length > 0 && (
                       <div className="mt-4 space-y-2">
                         {formData.uploadedFiles.map((file, idx) => (
                           <div
                             key={idx}
-                            className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800"
+                            className="flex items-center justify-between p-3.5 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800 hover:shadow-md transition-all group/file"
                           >
-                            <span className="text-sm text-gray-900 dark:text-white truncate flex items-center gap-2">
-                              <FileText size={16} className="text-green-600 dark:text-green-400 flex-shrink-0" />
-                              {file.name}
-                            </span>
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
+                                <FileText size={18} className="text-green-600 dark:text-green-400" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{file.name}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{file.size ? `${(file.size / 1024 / 1024).toFixed(2)}MB` : 'Uploaded'}</p>
+                              </div>
+                            </div>
                             <button
                               onClick={() => removeFile(idx)}
-                              className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-all"
+                              className="p-2 opacity-0 group-hover/file:opacity-100 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-all ml-2"
                             >
                               <X size={16} className="text-red-500" />
                             </button>
@@ -863,9 +1284,12 @@ export default function CourseStep1() {
 
                         {/* File Notes */}
                         <div className="mt-4">
-                          <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                          <label className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide mb-3">
                             <FileText size={16} className="text-brand-teal" />
-                            Document Description <span className="text-red-500">*</span>
+                            <span>Document Description</span>
+                            <span className="inline-flex items-center gap-1 ml-auto px-2 py-0.5 bg-brand-teal/10 text-brand-teal rounded-full text-xs font-semibold">
+                              Required
+                            </span>
                             <div className="relative ml-1">
                               <Info 
                                 size={16} 
@@ -930,24 +1354,7 @@ export default function CourseStep1() {
                 </div>
               </div>
             </div>
-            
           </div>
-          
-          {/* AI Credits Warning */}
-          <div className="mt-6 mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-0.5">
-                <Zap size={20} className="text-amber-600 dark:text-amber-400" />
-              </div>
-              <div className="flex-1">
-                <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-200 mb-1">
-                  AI Credits Usage
-                </h4>
-                <p className="text-xs text-amber-800 dark:text-amber-300">
-                  Using AI-enhanced features like &quot;AI Enhance&quot; buttons and automated content generation will consume more credits. The more AI features you use, the higher your credit consumption will be.
-                </p>
-              </div>
-            </div>
           </div>
 
           {/* Navigation at bottom */}

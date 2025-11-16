@@ -8,6 +8,7 @@ export interface AdminSettings {
   user_id: string
   openrouter_api_key?: string
   openrouter_model: string
+  openrouter_fallback_models?: string  // JSON array of fallback model IDs
   temperature: number
   max_tokens: number
   created_at: string

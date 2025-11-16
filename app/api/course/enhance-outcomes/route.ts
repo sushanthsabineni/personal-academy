@@ -19,6 +19,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
+    const userId = session.user.id
+    const CREDITS_COST = 25
+
+    // Check user has enough credits
+    const { data: userProfile } = await (supabase
+      .from('profiles') as any)
+      .select('credits_balance')
+      .eq('id', userId)
+      .single()
+
+    const currentCredits = userProfile?.credits_balance || 0
+    if (currentCredits < CREDITS_COST) {
+      return NextResponse.json(
+        { success: false, error: `Insufficient credits. You need ${CREDITS_COST} credits but have ${currentCredits}` },
+        { status: 402 } // 402 Payment Required
+      )
+    }
+
     const {
       courseTitle,
       targetAudience,
@@ -95,10 +113,30 @@ export async function POST(req: NextRequest) {
       'enhance-learning-outcomes'
     )
 
+    // Deduct credits from user
+    const newCreditsBalance = currentCredits - CREDITS_COST
+    await (supabase
+      .from('profiles') as any)
+      .update({ credits_balance: newCreditsBalance })
+      .eq('id', userId)
+
+    // Create transaction record for audit trail
+    await (supabase
+      .from('credits_transactions') as any)
+      .insert({
+        user_id: userId,
+        amount: -CREDITS_COST,
+        transaction_type: 'ai_enhance_outcomes',
+        description: 'AI Learning Outcomes Enhancement',
+        balance_after: newCreditsBalance,
+        created_at: new Date().toISOString(),
+      })
+
     return NextResponse.json({
       success: true,
       outcomes: enhancedOutcomes.result,
       modelUsed: enhancedOutcomes.modelUsed,
+      newCreditsBalance,
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
